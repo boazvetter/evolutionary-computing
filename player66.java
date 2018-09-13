@@ -3,6 +3,7 @@ import org.vu.contest.ContestEvaluation;
 
 import java.util.Random;
 import java.util.Properties;
+import java.util.Arrays;
 
 public class player66 implements ContestSubmission
 {
@@ -47,20 +48,44 @@ public class player66 implements ContestSubmission
 	public void run()
 	{
 		// Run your algorithm here
-		System.out.print("Awoooooooooooooooo");
+		
         
         int evals = 0;
         // init population
         // calculate fitness
+        double population[][] = init_population(5);
+		System.out.println(Arrays.toString(population[0]));
+
         while(evals<evaluations_limit_){
             // Select parents
             // Apply crossover / mutation operators
             double child[] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
             // Check fitness of unknown fuction
             Double fitness = (double) evaluation_.evaluate(child);
+
             evals++;	
             // Select survivors
         }
+        // System.out.println(fitness);
 
 	}
+
+
+
+	public double[][] init_population(int n){
+		double population[][] = new double[n][10];
+		
+		for(int x=0; x < n; x++){
+			
+			double child[] = new double[10];
+			for (int j=0; j < 10; j++){
+				child[j] = rnd_.nextDouble();
+			} 
+			
+			population[x] = child;
+		}
+
+		return population;
+	}
+
 }
