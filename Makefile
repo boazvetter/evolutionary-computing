@@ -1,3 +1,7 @@
+.PHONY set-ld-path:
+set-ld-path:
+	export LD_LIBRARY_PATH=$PATH
+
 player66.class: contest.jar player66.java
 	java -cp contest.jar player66.java
 
@@ -5,7 +9,7 @@ submission: MainClass.txt submission.jar player66.class
 	jar cmf MainClass.txt submission.jar player66.class
 
 .PHONY katsuura:
-katsuura: submission testrun.jar
+katsuura: submission testrun.jar set-ld-path
 	java -jar testrun.jar -submission=player66 -evaluation=KatsuuraEvaluation -seed=1
 
 .PHONY sphere:
