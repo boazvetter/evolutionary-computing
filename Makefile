@@ -3,7 +3,7 @@ set-ld-path:
 	export LD_LIBRARY_PATH=$PATH
 
 player66.class: contest.jar player66.java
-	java -cp contest.jar player66.java
+	javac -cp contest.jar player66.java
 
 submission: MainClass.txt submission.jar player66.class
 	jar cmf MainClass.txt submission.jar player66.class
@@ -20,7 +20,7 @@ sphere: submission testrun.jar
 bent-cigar: submission testrun.jar
 	java -jar testrun.jar -submission=player66 -evaluation=BentCigarFunction -seed=1
 
-.PHONY schaffars:
+.PHONY schaffers:
 schaffers: submission testrun.jar
 	java -jar testrun.jar -submission=player66 -evaluation=SphereEvaluation -seed=1
 
