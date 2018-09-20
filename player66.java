@@ -79,9 +79,9 @@ public class player66 implements ContestSubmission
 			
 			double child[] = new double[10];
 			for (int j=0; j < 10; j++){
-				child[j] = rnd_.nextDouble();
-			} 
-			
+				child[j] = rnd_.nextDouble() * 10.0 - 5.0;
+			}
+
 			population[x] = child;
 		}
 
