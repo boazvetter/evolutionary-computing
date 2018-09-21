@@ -1,6 +1,6 @@
 .PHONY set-ld-path:
 set-ld-path:
-	export LD_LIBRARY_PATH=$PATH
+	export LD_LIBRARY_PATH=$$PWD
 
 player66.class: contest.jar player66.java
 	javac -cp contest.jar player66.java

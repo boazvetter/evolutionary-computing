@@ -54,8 +54,8 @@ public class player66 implements ContestSubmission
         // init population
         // calculate fitness
         double population[][] = init_population(5);
-		System.out.println(Arrays.toString(population[0]));
-
+		//System.out.println(Arrays.toString(population[0]));
+		onepointcross(population[1], population[2]);
         while(evals<evaluations_limit_){
             // Select parents
             // Apply crossover / mutation operators
@@ -88,4 +88,35 @@ public class player66 implements ContestSubmission
 		return population;
 	}
 
+
+	public void onepointcross (double parent1[], double parent2[]){
+		// Set a random point for crossover 
+		int point = new Random().nextInt(10);
+		System.out.println(point);
+		// Initialize two children
+		double child1[] = new double[10];
+		double child2[] = new double[10];
+		//Loop te the parents before the point to make 
+		// first part of the children
+		for (int i=0; i < 10; i++){
+			if(i < point){
+				child1[i] = parent1[i];
+				child2[i] = parent2[i];
+			}
+			else{
+				child1[i] = parent2[i];
+				child2[i] = parent1[i];
+			}
+		}
+		//Loop te the parents after the point to make 
+		// second part of the children
+		//for (int i = point; i < 10; i++){
+			
+	//	}
+		//System.out.println("parent 1:");
+		//System.out.println(Arrays.toString(parent1));
+
+		//System.out.println("child 1:");
+		//System.out.println(Arrays.toString(child1));
+	}
 }
