@@ -56,7 +56,11 @@ public class player66 implements ContestSubmission
         double population[][] = init_population(5);
 		//System.out.println(Arrays.toString(population[0]));
 		onepointcross(population[1], population[2]);
-		mutate(population[0]);
+		//Mutate population
+		for (int n = 0; n < population.length; n++){
+			mutate(population[n]);
+		}
+
         while(evals<evaluations_limit_){
             // Select parents
             // Apply crossover / mutation operators
