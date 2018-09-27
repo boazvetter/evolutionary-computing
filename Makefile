@@ -5,7 +5,7 @@ set-ld-path:
 player66.class: contest.jar player66.java
 	javac -cp contest.jar player66.java
 
-submission: MainClass.txt submission.jar $(wildcard *.class)
+submission: MainClass.txt $(wildcard *.class) player66.class
 	jar cmf MainClass.txt submission.jar $(wildcard *.class)
 
 .PHONY katsuura:
