@@ -174,7 +174,7 @@ class Instance implements Comparable<Instance>
         if (this._fitness != null) {
             return;
         }
-        
+
 		//init
 		double lowerlim = 0.99;
 		double upperlim = 1.01;
