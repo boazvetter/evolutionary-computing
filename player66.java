@@ -122,6 +122,9 @@ public class player66 implements ContestSubmission
 	}
 
 	public void mutate(double gene[]){
+		//init
+		double lowerlim = 0.99;
+		double upperlim = 1.01;
 		//System.out.print("Gene to be mutated: ");
 		//System.out.println(Arrays.toString(gene));
 		// Probability of mutating a gene
@@ -131,10 +134,10 @@ public class player66 implements ContestSubmission
 			//System.out.print("Mutate: ");
 			//System.out.println(mutateprob);
 			int chromosome = rnd_.nextInt(10);
-			gene[chromosome] = rnd_.nextDouble() * 10.0 - 5.0;
+			gene[chromosome] = gene[chromosome] * lowerlim + rnd_.nextDouble() * (upperlim - lowerlim);
 			//System.out.print("Same gene after mutation: ");
-			//System.out.println(Arrays.toString(gene));
-		}
+			//System.out.println(Arrays.toString(gene));				
+		}	
 	}
 
 
