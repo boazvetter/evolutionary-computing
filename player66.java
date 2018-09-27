@@ -10,12 +10,12 @@ public class player66 implements ContestSubmission
 	Random rnd_;
 	ContestEvaluation evaluation_;
     private int evaluations_limit_;
-	
+
 	public player66()
 	{
 		rnd_ = new Random();
 	}
-	
+
 	public void setSeed(long seed)
 	{
 		// Set seed of algortihms random process
@@ -26,7 +26,7 @@ public class player66 implements ContestSubmission
 	{
 		// Set evaluation problem used in the run
 		evaluation_ = evaluation;
-		
+
 		// Get evaluation properties
 		Properties props = evaluation.getProperties();
         // Get evaluation limit
@@ -44,18 +44,23 @@ public class player66 implements ContestSubmission
             // Do sth else
         }
     }
-    
+
 	public void run()
 	{
 		// Run your algorithm here
-		
-        
+
+
         int evals = 0;
         // init population
         // calculate fitness
         double population[][] = init_population(10);
 		//System.out.println(Arrays.toString(population[0]));
 		// onepointcross(population[1], population[2]);
+
+		//Mutate population
+		for (int n = 0; n < population.length; n++){
+			mutate(population[n]);
+		}
 
         evaluations_limit_ = 20;
         while(evals<evaluations_limit_){
@@ -196,4 +201,25 @@ public class player66 implements ContestSubmission
         childs[1] = child2;
         return childs;
 	}
+
+	public void mutate(double gene[]){
+		//init
+		double lowerlim = 0.99;
+		double upperlim = 1.01;
+		//System.out.print("Gene to be mutated: ");
+		//System.out.println(Arrays.toString(gene));
+		// Probability of mutating a gene
+		boolean mutateprob = rnd_.nextInt(5)==0;
+		// Uniform mutation of chromosomes
+		if(mutateprob){
+			//System.out.print("Mutate: ");
+			//System.out.println(mutateprob);
+			int chromosome = rnd_.nextInt(10);
+			gene[chromosome] = gene[chromosome] * lowerlim + rnd_.nextDouble() * (upperlim - lowerlim);
+			//System.out.print("Same gene after mutation: ");
+			//System.out.println(Arrays.toString(gene));
+		}
+	}
+
+
 }
