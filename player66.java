@@ -56,6 +56,7 @@ public class player66 implements ContestSubmission
         double population[][] = init_population(5);
 		//System.out.println(Arrays.toString(population[0]));
 		onepointcross(population[1], population[2]);
+		mutate(population[0]);
         while(evals<evaluations_limit_){
             // Select parents
             // Apply crossover / mutation operators
@@ -119,4 +120,22 @@ public class player66 implements ContestSubmission
 		//System.out.println("child 1:");
 		//System.out.println(Arrays.toString(child1));
 	}
+
+	public void mutate(double gene[]){
+		//System.out.print("Gene to be mutated: ");
+		//System.out.println(Arrays.toString(gene));
+		// Probability of mutating a gene
+		boolean mutateprob = rnd_.nextInt(5)==0;
+		// Uniform mutation of chromosomes
+		if(mutateprob){
+			//System.out.print("Mutate: ");
+			//System.out.println(mutateprob);
+			int chromosome = rnd_.nextInt(10);
+			gene[chromosome] = rnd_.nextDouble() * 10.0 - 5.0;
+			//System.out.print("Same gene after mutation: ");
+			//System.out.println(Arrays.toString(gene));
+		}
+	}
+
+
 }
