@@ -17,7 +17,7 @@ sphere: submission testrun.jar
 	java -jar testrun.jar -submission=player66 -evaluation=SphereEvaluation -seed=1
 
 .PHONY bent-cigar:
-bent-cigar: submission testrun.jar
+bent-cigar: submission testrun.jar set-ld-path
 	java -jar testrun.jar -submission=player66 -evaluation=BentCigarFunction -seed=1
 
 .PHONY schaffers:
