@@ -133,7 +133,6 @@ public class player66 implements ContestSubmission
                     break;
                 }
             }
-            relative_fitnesses = [ 0.1 0.05 0.05 0.1 0.7]
 
             parents[p] = population[chosen_parent];
 
