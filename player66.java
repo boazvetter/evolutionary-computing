@@ -53,100 +53,81 @@ public class player66 implements ContestSubmission
         int evals = 0;
         // init population
         // calculate fitness
-        double population[][] = init_population(10);
-		//System.out.println(Arrays.toString(population[0]));
-		// onepointcross(population[1], population[2]);
+        Instance[] population = init_population(10);
 
-		//Mutate population
-		for (int n = 0; n < population.length; n++){
-			mutate(population[n]);
-		}
+        while (evals < this.evaluations_limit_) {
+            for (int i = 0; i < population.length && evals < this.evaluations_limit_; i += 1) {
+                population[i].calculate_fitness(this.evaluation_);
+                evals += 1;
+            }
 
-        evaluations_limit_ = 20;
-        while(evals<evaluations_limit_){
-            // System.out.println(Arrays.deepToString(population));
-            // System.out.println(population.length);
+            // Sort the population according to their fitness.
+            // They are sorted from worst to best.
+            Arrays.sort(population);
 
-            // Select parents (stochastic component, can result in bigger population)
-            population = select_parents(population, 10);
+            Instance[] new_population = new Instance[population.length];
+            System.arraycopy(population, 0, new_population, 0, population.length);
 
-            // System.out.println(Arrays.toString(population[0]));
+            // Now we make a new population through parent selection and cross over.
 
+            int[] selections = rank_based_selection(population, population.length);
 
-            // Apply crossover / mutation operators
-            double child[] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-            double childs[][] = new double[2][10];
-            childs = onepointcross(population[0], population[1]);
-            population[0] = childs[0];
-            population[1] = childs[1];
+            for (int i = 0; i < selections.length; i += 2) {
+                Instance[] children = Instance.one_point_crossover(
+                    population[selections[i]],
+                    population[selections[i + 1]],
+                    this.rnd_
+                );
 
-            // System.out.println(Arrays.toString(population[0]));
+                new_population[i] = children[0];
+                new_population[i + 1] = children[1];
+            }
 
-            // Check fitness of unknown fuction
-            // Double fitness = (double) evaluation_.evaluate(childs[0]);
+            population = new_population;
 
-            evals++;
-            // Select survivors (deterministic, select n best individuals from population)
+            for (int i = 0; i < population.length; i += 1) {
+                population[i].mutate(this.rnd_);
+            }
         }
-        // System.out.println(fitness);
+    }
+    
+    public int[] rank_based_selection(Instance[] parents, int amount) {
+        double[] probabilities = new double[parents.length];
 
-	}
+        double s = 1.5;
 
-
-    public double[][] select_parents(double population[][], int nr_parents){
-
-        //
-        // CALCULATING FITNESS
-        //
-        double fitnesses[] = new double[population.length];
-        double sum = 0.0;
-        for(int i=0; i < population.length; i++){
-            fitnesses[i] = -1.0 / (double) evaluation_.evaluate(population[i]);
-            sum += fitnesses[i];
-        };
-        // System.out.print("Fitness of individuals: ");
-        // System.out.println(Arrays.toString(fitnesses));
-        // System.out.print("Fitness sum of population: ");
-        // System.out.println(sum);
-
-        double relative_fitnesses[] = fitnesses;
-        for(int i=0; i < population.length; i++){
-            relative_fitnesses[i] = fitnesses[i] / sum;
+        for (int i = 0; i < parents.length; i += 1) {
+            probabilities[i] = (2 - s) / parents.length + (2 * i * (s - 1)) / (parents.length * (parents.length - 1));
         }
-        System.out.println(Arrays.toString(relative_fitnesses));
 
-        //
-        // ROULETTE WHEEL PARENT SELECTION
-        //
-        double parents[][] = new double[nr_parents][10];
+        return select_parents(probabilities, amount);
+    }
 
-        for(int p=0; p<nr_parents; p++){
+    public int[] select_parents(double[] probabilities, int amount) {
+        int[] selections = new int[amount];
+
+        for (int p=0; p < amount; p += 1){
             double probability_sum = 0.0;
             double prob = rnd_.nextDouble();
 
             int chosen_parent = 0;
-            for(int i=0; i<population.length; i++){
-                probability_sum += fitnesses[i];
+            for (int i = 0 ; i < probabilities.length; i += 1){
+                probability_sum += probabilities[i];
 
-                if(prob < probability_sum){
+                if (prob < probability_sum){
                     chosen_parent = i;
                     break;
                 }
             }
 
-            parents[p] = population[chosen_parent];
-
+            selections[p] = chosen_parent;
         }
 
-
-
-        // double bestParents[][] = init_population(10);
-        // bestParents = Arrays.copyOfRange(population, 0, 5);
-        return parents;
+        return selections;
     }
 
-	public double[][] init_population(int n){
-		double population[][] = new double[n][10];
+	public Instance[] init_population(int n){
+		Instance population[] = new Instance[n];
 
 		for(int x=0; x < n; x++){
 
@@ -155,70 +136,86 @@ public class player66 implements ContestSubmission
 				child[j] = rnd_.nextDouble() * 10.0 - 5.0;
 			}
 
-			population[x] = child;
+			population[x] = new Instance(child);
 		}
 
 		return population;
 	}
+}
 
+class Instance implements Comparable<Instance>
+{
+    private double[] _genes;
+    private Double _fitness;
+    private Instance[] _parents;
 
-	public double[][] onepointcross (double parent1[], double parent2[]){
-		// Set a random point for crossover
-		int point = new Random().nextInt(10);
-		// System.out.print("Crossover point: ");
-  //       System.out.println(point);
-		// Initialize two children
-		double child1[] = new double[10];
-		double child2[] = new double[10];
-		//Loop the parents before the point to make
-		// first part of the children
-		for (int i=0; i < 10; i++){
-			if(i < point){
-				child1[i] = parent1[i];
-				child2[i] = parent2[i];
-			}
-			else{
-				child1[i] = parent2[i];
-				child2[i] = parent1[i];
-			}
-		}
+    public Instance(double[] genes) {
+        this._genes = genes;
+    }
 
-		// System.out.print("parent 1: ");
-		// System.out.println(Arrays.toString(parent1));
+    public Instance(double[] genes, Instance[] parents) {
+        this._genes = genes;
+        this._parents = parents;
+    }
 
-  //       System.out.print("parent 2: ");
-  //       System.out.println(Arrays.toString(parent2));
+    public double calculate_fitness(ContestEvaluation evaluation) {
+        if (this._fitness == null) {
+            this._fitness = (Double)evaluation.evaluate(this._genes);
+        }
 
-		// System.out.print("child 1:  ");
-		// System.out.println(Arrays.toString(child1));
+        return this._fitness;
+    }
 
-  //       System.out.print("child 2:  ");
-  //       System.out.println(Arrays.toString(child2));
+    public int compareTo(Instance other) {
+        return Double.compare(this._fitness, other._fitness);
+    }
 
-        double childs[][] = new double[2][10];
-        childs[0] = child1;
-        childs[1] = child2;
-        return childs;
-	}
-
-	public void mutate(double gene[]){
+    public void mutate(Random rnd) {
+        if (this._fitness != null) {
+            return;
+        }
+        
 		//init
 		double lowerlim = 0.99;
 		double upperlim = 1.01;
 		//System.out.print("Gene to be mutated: ");
 		//System.out.println(Arrays.toString(gene));
 		// Probability of mutating a gene
-		boolean mutateprob = rnd_.nextInt(5)==0;
+		boolean mutateprob = rnd.nextInt(5)==0;
 		// Uniform mutation of chromosomes
-		if(mutateprob){
+		if (mutateprob) {
 			//System.out.print("Mutate: ");
 			//System.out.println(mutateprob);
-			int chromosome = rnd_.nextInt(10);
-			gene[chromosome] = gene[chromosome] * lowerlim + rnd_.nextDouble() * (upperlim - lowerlim);
+			int chromosome = rnd.nextInt(this._genes.length);
+			this._genes[chromosome] = this._genes[chromosome] * lowerlim + rnd.nextDouble() * (upperlim - lowerlim);
 			//System.out.print("Same gene after mutation: ");
 			//System.out.println(Arrays.toString(gene));
-		}
-	}
+        }
+        
+        this._fitness = null;
+    }
 
+    public static Instance[] one_point_crossover(Instance p1, Instance p2, Random rnd) {
+        int cross_over_point = rnd.nextInt(p1._genes.length);
 
+        double[] c1 = new double[p1._genes.length];
+        double[] c2 = new double[p1._genes.length];
+
+        for (int i = 0; i < cross_over_point; i += 1) {
+            c1[i] = p1._genes[i];
+            c2[i] = p2._genes[i];
+        }
+
+        for (int i = cross_over_point; i < p1._genes.length; i += 1) {
+            c1[i] = p2._genes[i];
+            c2[i] = p1._genes[i];
+        }
+        
+        Instance[] children = new Instance[2];
+
+        children[0] = new Instance(c1);
+        children[1] = new Instance(c2);
+
+        return children;
+    }
 }
