@@ -68,7 +68,7 @@ public class player66 implements ContestSubmission
             // System.out.println(population.length);
 
             // Select parents (stochastic component, can result in bigger population)
-            population = select_parents(population, 10);
+            population = select_parents_fitness_proportional(population, 10);
 
             // System.out.println(Arrays.toString(population[0]));
 
@@ -93,7 +93,7 @@ public class player66 implements ContestSubmission
 	}
 
 
-    public double[][] select_parents(double population[][], int nr_parents){
+    public double[][] select_parents_fitness_proportional(double population[][], int nr_parents){
 
         //
         // CALCULATING FITNESS
@@ -104,10 +104,6 @@ public class player66 implements ContestSubmission
             fitnesses[i] = -1.0 / (double) evaluation_.evaluate(population[i]);
             sum += fitnesses[i];
         };
-        // System.out.print("Fitness of individuals: ");
-        // System.out.println(Arrays.toString(fitnesses));
-        // System.out.print("Fitness sum of population: ");
-        // System.out.println(sum);
 
         double relative_fitnesses[] = fitnesses;
         for(int i=0; i < population.length; i++){
@@ -115,11 +111,15 @@ public class player66 implements ContestSubmission
         }
         System.out.println(Arrays.toString(relative_fitnesses));
 
-        //
-        // ROULETTE WHEEL PARENT SELECTION
-        //
-        double parents[][] = new double[nr_parents][10];
+        double selected_parents[][] = new double[nr_parents][10];
+        selected_parents = roulette_wheel_selection(population, relative_fitnesses, nr_parents);
+        return selected_parents;
+    }
 
+
+    public double[][] roulette_wheel_selection(double population[][], double fitnesses[], int nr_parents){
+
+        double parents[][] = new double[nr_parents][10];
         for(int p=0; p<nr_parents; p++){
             double probability_sum = 0.0;
             double prob = rnd_.nextDouble();
@@ -138,12 +138,9 @@ public class player66 implements ContestSubmission
 
         }
 
-
-
-        // double bestParents[][] = init_population(10);
-        // bestParents = Arrays.copyOfRange(population, 0, 5);
         return parents;
     }
+
 
 	public double[][] init_population(int n){
 		double population[][] = new double[n][10];
