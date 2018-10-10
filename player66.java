@@ -47,13 +47,15 @@ public class player66 implements ContestSubmission
 
 	public void run()
 	{
-		// Run your algorithm here
-
-
+		// Initialization 
         int evals = 0;
-        // init population
+        double STEP_SIZE = 0.05; // Mutation step size (sigma) for nonuniform mutation
+        String mutationForm = "nonuniform"; // Select the kind of mutation
+		Instance[] population = init_population(10);
+
+        
         // calculate fitness
-        Instance[] population = init_population(10);
+        
 
         while (evals < this.evaluations_limit_) {
             for (int i = 0; i < population.length && evals < this.evaluations_limit_; i += 1) {
@@ -85,8 +87,11 @@ public class player66 implements ContestSubmission
 
             population = new_population;
 
+            // Perform mutation
             for (int i = 0; i < population.length; i += 1) {
-                population[i].mutate(this.rnd_);
+            	population[i].getInfo();
+                population[i].mutate(this.rnd_, STEP_SIZE, mutationForm);
+                population[i].getInfo();
             }
         }
     }
@@ -170,30 +175,51 @@ class Instance implements Comparable<Instance>
         return Double.compare(this._fitness, other._fitness);
     }
 
-    public void mutate(Random rnd) {
+    public void mutate(Random rnd, double sigma, String mutationForm) {
         if (this._fitness != null) {
             return;
         }
 
-		//init
-		double lowerlim = 0.99;
-		double upperlim = 1.01;
-		//System.out.print("Gene to be mutated: ");
-		//System.out.println(Arrays.toString(gene));
-		// Probability of mutating a gene
-		boolean mutateprob = rnd.nextInt(5)==0;
-		// Uniform mutation of chromosomes
-		if (mutateprob) {
-			//System.out.print("Mutate: ");
-			//System.out.println(mutateprob);
-			int chromosome = rnd.nextInt(this._genes.length);
-			this._genes[chromosome] = this._genes[chromosome] * lowerlim + rnd.nextDouble() * (upperlim - lowerlim);
-			//System.out.print("Same gene after mutation: ");
-			//System.out.println(Arrays.toString(gene));
+		// Initialize
+        boolean mutateprob = true; // p = 1
+		
+		// Uniform mutation of alleles <x1,...,xn>
+		if (mutateprob) {			
+            int allele = rnd.nextInt(this._genes.length); // Select one allele at random
+            switch (mutationForm.toLowerCase()) {
+            	case "uniform":
+            		double lowerlim = 0.99;
+					double upperlim = 1.01;
+            		this._genes[allele] = this._genes[allele] * (lowerlim + (rnd.nextDouble() * (upperlim - lowerlim)));
+            		break;
+            	case "nonuniform":
+            		double mutationFactor = (rnd.nextGaussian() * sigma) + 1;  // Normal distribution multiplied with step size and a mean of '1'
+            		this._genes[allele] = this._genes[allele] * mutationFactor; 
+            		break;
+            }
+			
+            // Curtail if the mutation is outside of bounds
+            if(this._genes[allele] > 5){
+                    this._genes[allele] = 5;
+                }
+                else if(this._genes[allele] < -5){
+                    this._genes[allele] = -5;
+                }       
         }
         
         this._fitness = null;
     }
+
+    public void getInfo() {
+    	System.out.print("Current objects' allele values: ");
+    	System.out.println(this);
+    	for (int i = 0; i < this._genes.length ; i++){
+    		System.out.print(" ");
+    		System.out.println(this._genes[i]);
+    	}
+    	System.out.println("");
+    }
+
 
     public static Instance[] one_point_crossover(Instance p1, Instance p2, Random rnd) {
         int cross_over_point = rnd.nextInt(p1._genes.length);
