@@ -49,14 +49,12 @@ public class player66 implements ContestSubmission
 	{
 		// Initialization 
         int evals = 0;
-        double STEP_SIZE = 0.05; // Mutation step size (sigma) for nonuniform mutation
         String mutationForm = "nonuniform"; // Select the kind of mutation
-		Instance[] population = init_population(10);
+		double learningRate = 0.05;
+		Instance[] population = init_population(100);
 
         
-        // calculate fitness
-        
-
+        // calculate fitness       
         while (evals < this.evaluations_limit_) {
             for (int i = 0; i < population.length && evals < this.evaluations_limit_; i += 1) {
                 population[i].calculate_fitness(this.evaluation_);
@@ -64,14 +62,17 @@ public class player66 implements ContestSubmission
             }
 
             // Sort the population according to their fitness.
-            // They are sorted from worst to best.
+            // They are sorted from worst to best.                   
             Arrays.sort(population);
+            // System.out.println("ranked: ");
+            // for (int i = 0; i < population.length; i ++){
+            // 	population[i].getInfo();
+            // }
 
             Instance[] new_population = new Instance[population.length];
             System.arraycopy(population, 0, new_population, 0, population.length);
 
             // Now we make a new population through parent selection and cross over.
-
             int[] selections = rank_based_selection(population, population.length);
 
             for (int i = 0; i < selections.length; i += 2) {
@@ -89,15 +90,14 @@ public class player66 implements ContestSubmission
 
             // Perform mutation
             for (int i = 0; i < population.length; i += 1) {
-            	population[i].getInfo();
-                population[i].mutate(this.rnd_, STEP_SIZE, mutationForm);
-                population[i].getInfo();
+                population[i].mutate(this.rnd_, mutationForm, learningRate);
             }
         }
     }
     
     public int[] rank_based_selection(Instance[] parents, int amount) {
         double[] probabilities = new double[parents.length];
+
 
         double s = 1.5;
 
@@ -118,7 +118,6 @@ public class player66 implements ContestSubmission
             int chosen_parent = 0;
             for (int i = 0 ; i < probabilities.length; i += 1){
                 probability_sum += probabilities[i];
-
                 if (prob < probability_sum){
                     chosen_parent = i;
                     break;
@@ -133,17 +132,16 @@ public class player66 implements ContestSubmission
 
 	public Instance[] init_population(int n){
 		Instance population[] = new Instance[n];
+		double stepSize;
 
 		for(int x=0; x < n; x++){
-
 			double child[] = new double[10];
 			for (int j=0; j < 10; j++){
 				child[j] = rnd_.nextDouble() * 10.0 - 5.0;
 			}
-
-			population[x] = new Instance(child);
+			stepSize = rnd_.nextDouble();
+			population[x] = new Instance(child, stepSize);
 		}
-
 		return population;
 	}
 }
@@ -153,15 +151,18 @@ class Instance implements Comparable<Instance>
     private double[] _genes;
     private Double _fitness;
     private Instance[] _parents;
+    private double _stepSize;
 
-    public Instance(double[] genes) {
+    public Instance(double[] genes, double stepSize) {
         this._genes = genes;
+        this._stepSize = stepSize;
     }
 
-    public Instance(double[] genes, Instance[] parents) {
+    public Instance(double[] genes, Instance[] parents, double stepSize) {
         this._genes = genes;
         this._parents = parents;
-    }
+        this._stepSize = stepSize;
+    } 
 
     public double calculate_fitness(ContestEvaluation evaluation) {
         if (this._fitness == null) {
@@ -175,26 +176,31 @@ class Instance implements Comparable<Instance>
         return Double.compare(this._fitness, other._fitness);
     }
 
-    public void mutate(Random rnd, double sigma, String mutationForm) {
+    public void mutate(Random rnd, String mutationForm, double learningRate) {
         if (this._fitness != null) {
             return;
         }
 
 		// Initialize
         boolean mutateprob = true; // p = 1
+        //boolean mutateprob = rnd.nextInt(10)==0; // p = 1/10th
 		
 		// Uniform mutation of alleles <x1,...,xn>
 		if (mutateprob) {			
             int allele = rnd.nextInt(this._genes.length); // Select one allele at random
             switch (mutationForm.toLowerCase()) {
             	case "uniform":
-            		double lowerlim = 0.99;
-					double upperlim = 1.01;
+            		double lowerlim = 0.75;
+					double upperlim = 1.25;
             		this._genes[allele] = this._genes[allele] * (lowerlim + (rnd.nextDouble() * (upperlim - lowerlim)));
             		break;
             	case "nonuniform":
-            		double mutationFactor = (rnd.nextGaussian() * sigma) + 1;  // Normal distribution multiplied with step size and a mean of '1'
-            		this._genes[allele] = this._genes[allele] * mutationFactor; 
+            		// Sigma is mutated every time step by multiplying it by a term e ^ (random variable from normal distribution with mean 0 and standard deviation t)
+            		double sigmaPrime = this._stepSize * Math.exp(learningRate * rnd.nextGaussian()); // Equation 4.2 in book
+            		//System.out.println(sigmaPrime);
+            		double mutationFactor = (sigmaPrime * rnd.nextGaussian()) + 1;  // Normal distribution multiplied with step size and a mean of '1'
+            		this._genes[allele] = this._genes[allele] * mutationFactor; // Equation 4.3 in book
+            		this._stepSize = sigmaPrime;
             		break;
             }
 			
@@ -212,7 +218,11 @@ class Instance implements Comparable<Instance>
 
     public void getInfo() {
     	System.out.print("Current objects' allele values: ");
-    	System.out.println(this);
+    	System.out.print(this);
+    	System.out.print(" || Step size: ");
+    	System.out.print(this._stepSize);
+    	System.out.print(" || Fitness: ");
+    	System.out.println(this._fitness);
     	for (int i = 0; i < this._genes.length ; i++){
     		System.out.print(" ");
     		System.out.println(this._genes[i]);
@@ -222,7 +232,7 @@ class Instance implements Comparable<Instance>
 
 
     public static Instance[] one_point_crossover(Instance p1, Instance p2, Random rnd) {
-        int cross_over_point = rnd.nextInt(p1._genes.length);
+        int cross_over_point = rnd.nextInt(p1._genes.length);       
 
         double[] c1 = new double[p1._genes.length];
         double[] c2 = new double[p1._genes.length];
@@ -239,8 +249,9 @@ class Instance implements Comparable<Instance>
         
         Instance[] children = new Instance[2];
 
-        children[0] = new Instance(c1);
-        children[1] = new Instance(c2);
+        children[0] = new Instance(c1, p1._stepSize); // TO BE CHANGED - WHOSE STEP SIZE DOES THE CHILD INHERIT?
+        children[1] = new Instance(c2, p2._stepSize); // TO BE CHANGED - WHOSE STEP SIZE DOES THE CHILD INHERIT?
+
 
         return children;
     }

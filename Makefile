@@ -22,7 +22,7 @@ bent-cigar: submission testrun.jar set-ld-path
 
 .PHONY schaffers:
 schaffers: submission testrun.jar
-	java -jar testrun.jar -submission=player66 -evaluation=SphereEvaluation -seed=1
+	java -jar testrun.jar -submission=player66 -evaluation=SchaffersEvaluation -seed=1
 
 
 .PHONY test-all:
