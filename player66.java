@@ -51,8 +51,9 @@ public class player66 implements ContestSubmission
 		// Initialization
         IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
         ICrossOverOperator crossOverOperator = new OnePointCrossOver();
-        IParentSelectionOperator parentSelectionOperator = new RankBasedSelection();
-		Instance[] population = init_population(100);
+        IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
+        Instance[] population = init_population(100);
+        int offSpringCount = 50;
 
         
         // calculate fitness       
@@ -69,13 +70,13 @@ public class player66 implements ContestSubmission
             System.arraycopy(population, 0, new_population, 0, population.length);
 
             // Now we make a new population through parent selection and cross over.
-            int[] selections = parentSelectionOperator.selectParents(population, 50, this.rnd_);
+            Instance[] selections = parentSelectionOperator.selectParents(population, offSpringCount, this.rnd_);
 
             for (int i = 0; i < selections.length; i += 2) {
                 Instance[] children = crossOverOperator.crossOver(
                     new Instance[] {
-                        population[selections[i]],
-                        population[selections[i + 1]]
+                        selections[i],
+                        selections[i + 1]
                     },
                     this.rnd_
                 );
@@ -109,6 +110,7 @@ public class player66 implements ContestSubmission
 	}
 }
 
+// Handy class to keep track of the amount of evaluations that have been performed.
 class ContestWrapper
 {
     private ContestEvaluation _contest;
@@ -136,18 +138,20 @@ class ContestWrapper
     }
 }
 
+// Common interface for the parent selection operators.
 interface IParentSelectionOperator
 {
-    public int[] selectParents(Instance[] parents, int parentCount, Random rnd);
+    public Instance[] selectParents(Instance[] parents, int parentCount, Random rnd);
 }
 
+// Implements linear rank based parent selection.
 class RankBasedSelection implements IParentSelectionOperator
 {
-    public int[] selectParents(Instance[] population, int parentCount, Random rnd) {
+    public Instance[] selectParents(Instance[] population, int parentCount, Random rnd) {
         // Sort them base on their performance.
         Arrays.sort(population);
 
-        int[] selections = new int[parentCount];
+        Instance[] selections = new Instance[parentCount];
 
         double[] probabilities = new double[population.length];
 
@@ -158,18 +162,67 @@ class RankBasedSelection implements IParentSelectionOperator
         }
 
         for (int i = 0; i < parentCount; i += 1) {
-            selections[i] = Utils.rouletteWheelSelection(probabilities, rnd);
+            selections[i] = population[Utils.rouletteWheelSelection(probabilities, rnd)];
         }
 
         return selections;
     }
 }
 
+// Implements tournament selection
+class TournamentSelection implements IParentSelectionOperator
+{
+    private int _tournamentSize;
+
+    public TournamentSelection(int tournamentSize) {
+        this._tournamentSize = tournamentSize;
+    }
+
+    public Instance[] selectParents(Instance[] population, int parentCount, Random rnd) {
+        Instance[] selections = new Instance[parentCount];
+
+        for (int i = 0; i < parentCount; i += 1) {
+            Instance[] participants = new Instance[this._tournamentSize];
+
+            for (int j = 0; j < participants.length; j += 1) {
+                participants[j] = population[rnd.nextInt(population.length)];
+            }
+
+            Arrays.sort(participants);
+
+            selections[i] = participants[participants.length - 1];
+        }
+
+        return selections;
+    }
+}
+
+
+// Common interface for the cross over operator.
 interface ICrossOverOperator
 {
     public Instance[] crossOver(Instance[] parents, Random rnd);
 }
 
+// Implements the identity cross over operator.
+// Basically clones the parents into children.
+class IdentityCrossOver implements ICrossOverOperator
+{
+    public Instance[] crossOver(Instance[] parents, Random rnd) {
+        Instance[] children = new Instance[parents.length];
+
+        for (int i = 0; i < parents.length; i += 1) {
+            children[i] = new Instance(
+                parents[i].getGenes(),
+                parents[i].getMutationRates()
+            );
+        }
+
+        return children;
+    }
+}
+
+// Implements the one point cross over operator.
 class OnePointCrossOver implements ICrossOverOperator
 {
     public Instance[] crossOver(Instance[] parents, Random rnd) {
@@ -205,21 +258,20 @@ class OnePointCrossOver implements ICrossOverOperator
     }
 }
 
+// The common interface for the mutation operator.
 interface IMutationOperator
 {
     public void mutate(double[] genes, double[] mutationRates, Random rnd);
 }
 
+// Implements the identity mutation.
 class IdentityMutation implements IMutationOperator {
-    public IdentityMutation() {
-
-    }
-
     public void mutate(double[] genes, double[] mutationRates, Random rnd) {
         // Here we just do nothing.
     }
 }
 
+// Implements self adaptive mutation with per gene mutation rates.
 class SelfAdaptiveMutation implements IMutationOperator
 {
     private double _tau;
@@ -251,6 +303,7 @@ class SelfAdaptiveMutation implements IMutationOperator
     }
 }
 
+// Utility class to hold usefull functions.
 class Utils {
     public static double clamp(double lowerBound, double upperBound, double value) {
         if (value > upperBound) {
@@ -279,11 +332,15 @@ class Utils {
     }
 }
 
+// Constants used.
 class Constants {
+    // Maximum value of a gene.
     public static double MAX_VALUE = 5.0;
+    // Minimum value for a gene.
     public static double MIN_VALUE = -5.0;
 }
 
+// Class that keeps track of all the information pertaining a single individual.
 class Instance implements Comparable<Instance>
 {
     private double[] _genes;
