@@ -4,12 +4,12 @@ import org.vu.contest.ContestEvaluation;
 import java.util.Random;
 import java.util.Properties;
 import java.util.Arrays;
+import java.lang.Math;
 
 public class player66 implements ContestSubmission
 {
 	Random rnd_;
-	ContestEvaluation evaluation_;
-    private int evaluations_limit_;
+    private ContestWrapper _contest;
 
 	public player66()
 	{
@@ -25,17 +25,18 @@ public class player66 implements ContestSubmission
 	public void setEvaluation(ContestEvaluation evaluation)
 	{
 		// Set evaluation problem used in the run
-		evaluation_ = evaluation;
 
 		// Get evaluation properties
 		Properties props = evaluation.getProperties();
         // Get evaluation limit
-        evaluations_limit_ = Integer.parseInt(props.getProperty("Evaluations"));
+        int evaluations_limit_ = Integer.parseInt(props.getProperty("Evaluations"));
 		// Property keys depend on specific evaluation
 		// E.g. double param = Double.parseDouble(props.getProperty("property_name"));
         boolean isMultimodal = Boolean.parseBoolean(props.getProperty("Multimodal"));
         boolean hasStructure = Boolean.parseBoolean(props.getProperty("Regular"));
         boolean isSeparable = Boolean.parseBoolean(props.getProperty("Separable"));
+
+        this._contest = new ContestWrapper(evaluation, evaluations_limit_);
 
 		// Do sth with property values, e.g. specify relevant settings of your algorithm
         if(isMultimodal){
@@ -47,18 +48,16 @@ public class player66 implements ContestSubmission
 
 	public void run()
 	{
-		// Initialization 
-        int evals = 0;
-        String mutationForm = "nonuniform"; // Select the kind of mutation
-		double learningRate = 0.05;
+		// Initialization
+        IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
+        ICrossOverOperator crossOverOperator = new OnePointCrossOver();
 		Instance[] population = init_population(100);
 
         
         // calculate fitness       
-        while (evals < this.evaluations_limit_) {
-            for (int i = 0; i < population.length && evals < this.evaluations_limit_; i += 1) {
-                population[i].calculate_fitness(this.evaluation_);
-                evals += 1;
+        while (!this._contest.isDone()) {
+            for (int i = 0; i < population.length && !this._contest.isDone(); i += 1) {
+                this._contest.evaluate(population[i]);
             }
 
             // Sort the population according to their fitness.
@@ -73,12 +72,14 @@ public class player66 implements ContestSubmission
             System.arraycopy(population, 0, new_population, 0, population.length);
 
             // Now we make a new population through parent selection and cross over.
-            int[] selections = rank_based_selection(population, population.length);
+            int[] selections = rank_based_selection(population, 50);
 
             for (int i = 0; i < selections.length; i += 2) {
-                Instance[] children = Instance.one_point_crossover(
-                    population[selections[i]],
-                    population[selections[i + 1]],
+                Instance[] children = crossOverOperator.crossOver(
+                    new Instance[] {
+                        population[selections[i]],
+                        population[selections[i + 1]]
+                    },
                     this.rnd_
                 );
 
@@ -90,7 +91,7 @@ public class player66 implements ContestSubmission
 
             // Perform mutation
             for (int i = 0; i < population.length; i += 1) {
-                population[i].mutate(this.rnd_, mutationForm, learningRate);
+                population[i].mutate(this.rnd_, mutationOperator);
             }
         }
     }
@@ -132,18 +133,150 @@ public class player66 implements ContestSubmission
 
 	public Instance[] init_population(int n){
 		Instance population[] = new Instance[n];
-		double stepSize;
 
 		for(int x=0; x < n; x++){
-			double child[] = new double[10];
+            double[] child = new double[10];
+            double[] mutationRates = new double[10];
 			for (int j=0; j < 10; j++){
-				child[j] = rnd_.nextDouble() * 10.0 - 5.0;
+                child[j] = rnd_.nextDouble() * 10.0 - 5.0;
+                mutationRates[j] = rnd_.nextGaussian();
 			}
-			stepSize = rnd_.nextDouble();
-			population[x] = new Instance(child, stepSize);
+			population[x] = new Instance(child, mutationRates);
 		}
 		return population;
 	}
+}
+
+class ContestWrapper
+{
+    private ContestEvaluation _contest;
+    private int _evaluationLimit;
+    private int _evauationCount;
+
+    public ContestWrapper(ContestEvaluation contest, int evaluationLimit) {
+        this._contest = contest;
+        this._evaluationLimit = evaluationLimit;
+        this._evauationCount = 0;
+    }
+
+    public boolean isDone() {
+        return this._evaluationLimit == this._evauationCount;
+    }
+
+    public double evaluate(Instance instance) {
+        if (!instance.hasFitness()) {
+            this._evauationCount += 1;
+            return instance.calculate_fitness(this._contest);
+        }
+        else {
+            return instance.getFitness();
+        }
+    }
+}
+
+interface ICrossOverOperator
+{
+    public Instance[] crossOver(Instance[] parents, Random rnd);
+}
+
+class OnePointCrossOver implements ICrossOverOperator
+{
+    public Instance[] crossOver(Instance[] parents, Random rnd) {
+        int geneCount = parents[0].getGenes().length;
+        int cross_over_point = rnd.nextInt(geneCount);       
+
+        double[] c1 = new double[geneCount];
+        double[] c2 = new double[geneCount];
+        double[] m1 = new double[geneCount];
+        double[] m2 = new double[geneCount];
+
+        for (int i = 0; i < cross_over_point; i += 1) {
+            c1[i] = parents[0].getGenes()[i];
+            c2[i] = parents[1].getGenes()[i];
+            m1[i] = parents[0].getMutationRates()[i];
+            m2[i] = parents[1].getMutationRates()[i];
+        }
+
+        for (int i = cross_over_point; i < geneCount; i += 1) {
+            c1[i] = parents[1].getGenes()[i];
+            c2[i] = parents[0].getGenes()[i];
+            m1[i] = parents[1].getMutationRates()[i];
+            m2[i] = parents[0].getMutationRates()[i];
+        }
+        
+        Instance[] children = new Instance[2];
+
+        children[0] = new Instance(c1, m1);
+        children[1] = new Instance(c2, m2);
+
+
+        return children;   
+    }
+}
+
+interface IMutationOperator
+{
+    public void mutate(double[] genes, double[] mutationRates, Random rnd);
+}
+
+class IdentityMutation implements IMutationOperator {
+    public IdentityMutation() {
+
+    }
+
+    public void mutate(double[] genes, double[] mutationRates, Random rnd) {
+        // Here we just do nothing.
+    }
+}
+
+class SelfAdaptiveMutation implements IMutationOperator
+{
+    private double _tau;
+    private double _tauPrime;
+
+    public SelfAdaptiveMutation(double tau, double tauPrime) {
+        this._tau = _tau;
+        this._tauPrime = tauPrime;
+    }
+
+    public void mutate(double[] genes, double[] mutationRates, Random rnd) {
+        // Perform self adaptive mutation.
+
+        // First we mutate the array of mutation rates.
+        double globalMutationRate = this._tauPrime * rnd.nextGaussian();
+        for (int i = 0; i < mutationRates.length; i += 1) {
+            double individualMutationRate = this._tau * rnd.nextGaussian();
+            mutationRates[i] = mutationRates[i] * Math.exp(globalMutationRate + individualMutationRate);
+        }
+
+        // Now that we have adjusted the mutation rates for each gene we can apply those.
+        for (int i = 0; i < genes.length; i += 1) {
+            genes[i] = Utils.clamp(
+                Constants.MIN_VALUE,
+                Constants.MAX_VALUE,
+                genes[i] + mutationRates[i] * rnd.nextGaussian()
+            );
+        }
+    }
+}
+
+class Utils {
+    public static double clamp(double lowerBound, double upperBound, double value) {
+        if (value > upperBound) {
+            return upperBound;
+        }
+        else if (value < lowerBound) {
+            return lowerBound;
+        }
+        else {
+            return value;
+        }
+    }
+}
+
+class Constants {
+    public static double MAX_VALUE = 5.0;
+    public static double MIN_VALUE = -5.0;
 }
 
 class Instance implements Comparable<Instance>
@@ -151,18 +284,34 @@ class Instance implements Comparable<Instance>
     private double[] _genes;
     private Double _fitness;
     private Instance[] _parents;
-    private double _stepSize;
+    private double[] _mutationRates;
 
-    public Instance(double[] genes, double stepSize) {
+    public Instance(double[] genes, double[] mutationRates) {
         this._genes = genes;
-        this._stepSize = stepSize;
+        this._mutationRates = mutationRates;
     }
 
-    public Instance(double[] genes, Instance[] parents, double stepSize) {
+    public Instance(double[] genes, Instance[] parents, double[] mutationRates) {
         this._genes = genes;
         this._parents = parents;
-        this._stepSize = stepSize;
-    } 
+        this._mutationRates = _mutationRates;
+    }
+
+    public boolean hasFitness() {
+        return this._fitness != null;
+    }
+
+    public double getFitness() {
+        return this._fitness;
+    }
+
+    public double[] getGenes() {
+        return this._genes;
+    }
+
+    public double[] getMutationRates() {
+        return this._mutationRates;
+    }
 
     public double calculate_fitness(ContestEvaluation evaluation) {
         if (this._fitness == null) {
@@ -176,83 +325,11 @@ class Instance implements Comparable<Instance>
         return Double.compare(this._fitness, other._fitness);
     }
 
-    public void mutate(Random rnd, String mutationForm, double learningRate) {
+    public void mutate(Random rnd, IMutationOperator mutationOperator) {
         if (this._fitness != null) {
             return;
         }
 
-		// Initialize
-        boolean mutateprob = true; // p = 1
-        //boolean mutateprob = rnd.nextInt(10)==0; // p = 1/10th
-		
-		// Uniform mutation of alleles <x1,...,xn>
-		if (mutateprob) {			
-            int allele = rnd.nextInt(this._genes.length); // Select one allele at random
-            switch (mutationForm.toLowerCase()) {
-            	case "uniform":
-            		double lowerlim = 0.75;
-					double upperlim = 1.25;
-            		this._genes[allele] = this._genes[allele] * (lowerlim + (rnd.nextDouble() * (upperlim - lowerlim)));
-            		break;
-            	case "nonuniform":
-            		// Sigma is mutated every time step by multiplying it by a term e ^ (random variable from normal distribution with mean 0 and standard deviation t)
-            		double sigmaPrime = this._stepSize * Math.exp(learningRate * rnd.nextGaussian()); // Equation 4.2 in book
-            		//System.out.println(sigmaPrime);
-            		double mutationFactor = (sigmaPrime * rnd.nextGaussian()) + 1;  // Normal distribution multiplied with step size and a mean of '1'
-            		this._genes[allele] = this._genes[allele] * mutationFactor; // Equation 4.3 in book
-            		this._stepSize = sigmaPrime;
-            		break;
-            }
-			
-            // Curtail if the mutation is outside of bounds
-            if(this._genes[allele] > 5){
-                    this._genes[allele] = 5;
-                }
-                else if(this._genes[allele] < -5){
-                    this._genes[allele] = -5;
-                }       
-        }
-        
-        this._fitness = null;
-    }
-
-    public void getInfo() {
-    	System.out.print("Current objects' allele values: ");
-    	System.out.print(this);
-    	System.out.print(" || Step size: ");
-    	System.out.print(this._stepSize);
-    	System.out.print(" || Fitness: ");
-    	System.out.println(this._fitness);
-    	for (int i = 0; i < this._genes.length ; i++){
-    		System.out.print(" ");
-    		System.out.println(this._genes[i]);
-    	}
-    	System.out.println("");
-    }
-
-
-    public static Instance[] one_point_crossover(Instance p1, Instance p2, Random rnd) {
-        int cross_over_point = rnd.nextInt(p1._genes.length);       
-
-        double[] c1 = new double[p1._genes.length];
-        double[] c2 = new double[p1._genes.length];
-
-        for (int i = 0; i < cross_over_point; i += 1) {
-            c1[i] = p1._genes[i];
-            c2[i] = p2._genes[i];
-        }
-
-        for (int i = cross_over_point; i < p1._genes.length; i += 1) {
-            c1[i] = p2._genes[i];
-            c2[i] = p1._genes[i];
-        }
-        
-        Instance[] children = new Instance[2];
-
-        children[0] = new Instance(c1, p1._stepSize); // TO BE CHANGED - WHOSE STEP SIZE DOES THE CHILD INHERIT?
-        children[1] = new Instance(c2, p2._stepSize); // TO BE CHANGED - WHOSE STEP SIZE DOES THE CHILD INHERIT?
-
-
-        return children;
+        mutationOperator.mutate(this._genes, this._mutationRates, rnd);
     }
 }
