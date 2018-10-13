@@ -50,7 +50,7 @@ public class player66 implements ContestSubmission
 	{
 		// Initialization
         IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
-        ICrossOverOperator crossOverOperator = new OnePointCrossOver();
+        ICrossOverOperator crossOverOperator = new UniformCrossOver(0.5);
         IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
         ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
         Instance[] population = init_population(100);
@@ -280,13 +280,49 @@ class OnePointCrossOver implements ICrossOverOperator
             m2[i] = parents[0].getMutationRates()[i];
         }
         
-        Instance[] children = new Instance[2];
+        return new Instance[] {
+            new Instance(c1, m1),
+            new Instance(c2, m2)
+        };
+    }
+}
 
-        children[0] = new Instance(c1, m1);
-        children[1] = new Instance(c2, m2);
+// Implement the uniform cross over operation.
+class UniformCrossOver implements ICrossOverOperator
+{
+    private double _crossOverProbabilty;
 
+    public UniformCrossOver(double crossOverProbability) {
+        this._crossOverProbabilty = crossOverProbability;
+    }
 
-        return children;   
+    public Instance[] crossOver(Instance[] parents, Random rnd) {
+        int geneCount = parents[0].getGenes().length;
+
+        double[] c1 = new double[geneCount];
+        double[] c2 = new double[geneCount];
+        double[] m1 = new double[geneCount];
+        double[] m2 = new double[geneCount];
+
+        for (int i = 0; i < geneCount; i += 1) {
+            if (rnd.nextDouble() < this._crossOverProbabilty) {
+                c1[i] = parents[0].getGenes()[i];
+                c2[i] = parents[1].getGenes()[i];
+                m1[i] = parents[0].getMutationRates()[i];
+                m2[i] = parents[1].getMutationRates()[i];
+            }
+            else {
+                c1[i] = parents[1].getGenes()[i];
+                c2[i] = parents[0].getGenes()[i];
+                m1[i] = parents[1].getMutationRates()[i];
+                m2[i] = parents[0].getMutationRates()[i];
+            }
+        }
+        
+        return new Instance[] {
+            new Instance(c1, m1),
+            new Instance(c2, m2)
+        };
     }
 }
 
