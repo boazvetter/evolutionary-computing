@@ -51,6 +51,7 @@ public class player66 implements ContestSubmission
 		// Initialization
         IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
         ICrossOverOperator crossOverOperator = new OnePointCrossOver();
+        IParentSelectionOperator parentSelectionOperator = new RankBasedSelection();
 		Instance[] population = init_population(100);
 
         
@@ -63,16 +64,12 @@ public class player66 implements ContestSubmission
             // Sort the population according to their fitness.
             // They are sorted from worst to best.                   
             Arrays.sort(population);
-            // System.out.println("ranked: ");
-            // for (int i = 0; i < population.length; i ++){
-            // 	population[i].getInfo();
-            // }
 
             Instance[] new_population = new Instance[population.length];
             System.arraycopy(population, 0, new_population, 0, population.length);
 
             // Now we make a new population through parent selection and cross over.
-            int[] selections = rank_based_selection(population, 50);
+            int[] selections = parentSelectionOperator.selectParents(population, 50, this.rnd_);
 
             for (int i = 0; i < selections.length; i += 2) {
                 Instance[] children = crossOverOperator.crossOver(
@@ -94,41 +91,6 @@ public class player66 implements ContestSubmission
                 population[i].mutate(this.rnd_, mutationOperator);
             }
         }
-    }
-    
-    public int[] rank_based_selection(Instance[] parents, int amount) {
-        double[] probabilities = new double[parents.length];
-
-
-        double s = 1.5;
-
-        for (int i = 0; i < parents.length; i += 1) {
-            probabilities[i] = (2 - s) / parents.length + (2 * i * (s - 1)) / (parents.length * (parents.length - 1));
-        }
-
-        return select_parents(probabilities, amount);
-    }
-
-    public int[] select_parents(double[] probabilities, int amount) {
-        int[] selections = new int[amount];
-
-        for (int p=0; p < amount; p += 1){
-            double probability_sum = 0.0;
-            double prob = rnd_.nextDouble();
-
-            int chosen_parent = 0;
-            for (int i = 0 ; i < probabilities.length; i += 1){
-                probability_sum += probabilities[i];
-                if (prob < probability_sum){
-                    chosen_parent = i;
-                    break;
-                }
-            }
-
-            selections[p] = chosen_parent;
-        }
-
-        return selections;
     }
 
 	public Instance[] init_population(int n){
@@ -171,6 +133,35 @@ class ContestWrapper
         else {
             return instance.getFitness();
         }
+    }
+}
+
+interface IParentSelectionOperator
+{
+    public int[] selectParents(Instance[] parents, int parentCount, Random rnd);
+}
+
+class RankBasedSelection implements IParentSelectionOperator
+{
+    public int[] selectParents(Instance[] population, int parentCount, Random rnd) {
+        // Sort them base on their performance.
+        Arrays.sort(population);
+
+        int[] selections = new int[parentCount];
+
+        double[] probabilities = new double[population.length];
+
+        double s = 1.5;
+
+        for (int i = 0; i < population.length; i += 1) {
+            probabilities[i] = (2 - s) / population.length + (2 * i * (s - 1)) / (population.length * (population.length - 1));
+        }
+
+        for (int i = 0; i < parentCount; i += 1) {
+            selections[i] = Utils.rouletteWheelSelection(probabilities, rnd);
+        }
+
+        return selections;
     }
 }
 
@@ -271,6 +262,20 @@ class Utils {
         else {
             return value;
         }
+    }
+
+    public static int rouletteWheelSelection(double[] probabilities, Random rnd) {
+        double prob = rnd.nextDouble();
+        double probability_sum = 0.0;
+
+        for (int i = 0 ; i < probabilities.length; i += 1) {
+            probability_sum += probabilities[i];
+
+            if (prob < probability_sum) {
+                return i;
+            }
+        }
+        return probabilities.length - 1;
     }
 }
 
