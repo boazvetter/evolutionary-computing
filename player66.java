@@ -52,6 +52,7 @@ public class player66 implements ContestSubmission
         IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
         ICrossOverOperator crossOverOperator = new OnePointCrossOver();
         IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
+        ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
         Instance[] population = init_population(100);
         int offSpringCount = 50;
 
@@ -72,6 +73,8 @@ public class player66 implements ContestSubmission
             // Now we make a new population through parent selection and cross over.
             Instance[] selections = parentSelectionOperator.selectParents(population, offSpringCount, this.rnd_);
 
+            Instance[] offspring = new Instance[selections.length];
+
             for (int i = 0; i < selections.length; i += 2) {
                 Instance[] children = crossOverOperator.crossOver(
                     new Instance[] {
@@ -81,11 +84,11 @@ public class player66 implements ContestSubmission
                     this.rnd_
                 );
 
-                new_population[i] = children[0];
-                new_population[i + 1] = children[1];
+                offspring[i] = children[0];
+                offspring[i + 1] = children[1];
             }
 
-            population = new_population;
+            population = survivorSelectionMethod.selectSurvivors(population, offspring, this.rnd_);
 
             // Perform mutation
             for (int i = 0; i < population.length; i += 1) {
@@ -135,6 +138,35 @@ class ContestWrapper
         else {
             return instance.getFitness();
         }
+    }
+}
+
+// Common interface for survivor selection methods.
+interface ISurvivorSelectionMethod
+{
+    public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd);
+}
+
+// Implements genetor survivor selection method I.E. replace worst.
+class Genetor implements ISurvivorSelectionMethod
+{
+    public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd)
+    {
+        Instance[] new_population = new Instance[parents.length];
+
+        Arrays.sort(parents);
+
+        // Copy over the children.
+        for (int i = 0; i < children.length; i += 1) {
+            new_population[i] = children[i];
+        }
+
+        // Copy over the best from the parents.
+        for (int i = children.length; i < parents.length; i += 1) {
+            new_population[i] = parents[i];
+        }
+
+        return new_population;
     }
 }
 
