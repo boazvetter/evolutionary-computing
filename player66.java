@@ -179,6 +179,12 @@ interface IParentSelectionOperator
 // Implements linear rank based parent selection.
 class RankBasedSelection implements IParentSelectionOperator
 {
+    private double _selectionWeight;
+
+    public RankBasedSelection(double selectionWeight) {
+        this._selectionWeight = selectionWeight;
+    }
+
     public Instance[] selectParents(Instance[] population, int parentCount, Random rnd) {
         // Sort them base on their performance.
         Arrays.sort(population);
@@ -187,10 +193,9 @@ class RankBasedSelection implements IParentSelectionOperator
 
         double[] probabilities = new double[population.length];
 
-        double s = 1.5;
-
         for (int i = 0; i < population.length; i += 1) {
-            probabilities[i] = (2 - s) / population.length + (2 * i * (s - 1)) / (population.length * (population.length - 1));
+            double p = (2 - this._selectionWeight) / population.length;
+            probabilities[i] = p + (2 * i * (this._selectionWeight - 1)) / (population.length * (population.length - 1));
         }
 
         for (int i = 0; i < parentCount; i += 1) {
@@ -229,6 +234,19 @@ class TournamentSelection implements IParentSelectionOperator
     }
 }
 
+// Implements uniform parent selection.
+class UniformSelection implements IParentSelectionOperator
+{
+    public Instance[] selectParents(Instance[] population, int parentCount, Random rnd) {
+        Instance[] selections = new Instance[parentCount];
+
+        for (int i = 0;i < parentCount; i += 1) {
+            selections[i] = population[rnd.nextInt(population.length)];
+        }
+
+        return selections;
+    }
+}
 
 // Common interface for the cross over operator.
 interface ICrossOverOperator
