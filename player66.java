@@ -50,7 +50,7 @@ public class player66 implements ContestSubmission
 	{
 		// Initialization
         IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
-        ICrossOverOperator crossOverOperator = new UniformCrossOver(0.5);
+        ICrossOverOperator crossOverOperator = new SimpleArithmeticRecombination(0.3);
         IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
         ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
         Instance[] population = init_population(100);
@@ -251,6 +251,116 @@ class IdentityCrossOver implements ICrossOverOperator
         }
 
         return children;
+    }
+}
+
+// Implements simple arithmetic recombintation
+class SingleArithmeticRecombination implements ICrossOverOperator
+{
+    private double _weight;
+
+    public SingleArithmeticRecombination(double weight) {
+        this._weight = weight;
+    }
+
+    public Instance[] crossOver(Instance[] parents, Random rnd) {
+        int geneCount = parents[0].getGenes().length;
+        int crossOverPoint = rnd.nextInt(geneCount);
+
+        double[] c1 = new double[geneCount];
+        double[] c2 = new double[geneCount];
+        double[] m1 = new double[geneCount];
+        double[] m2 = new double[geneCount];
+
+        for (int i = 0; i < geneCount; i += 1) {
+            if (i == crossOverPoint) {
+                c1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
+                c2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+                m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
+                m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+            }
+            else {
+                c1[i] = parents[0].getGenes()[i];
+                c2[i] = parents[1].getGenes()[i];
+                m1[i] = parents[0].getMutationRates()[i];
+                m2[i] = parents[1].getMutationRates()[i];
+            }
+        }
+        
+        return new Instance[] {
+            new Instance(c1, m1),
+            new Instance(c2, m2)
+        };
+    }
+}
+
+// Implements simple arithmetic recombintation
+class SimpleArithmeticRecombination implements ICrossOverOperator
+{
+    private double _weight;
+
+    public SimpleArithmeticRecombination(double weight) {
+        this._weight = weight;
+    }
+
+    public Instance[] crossOver(Instance[] parents, Random rnd) {
+        int geneCount = parents[0].getGenes().length;
+        int crossOverPoint = rnd.nextInt(geneCount);
+
+        double[] c1 = new double[geneCount];
+        double[] c2 = new double[geneCount];
+        double[] m1 = new double[geneCount];
+        double[] m2 = new double[geneCount];
+
+        for (int i = 0; i < crossOverPoint; i += 1) {
+            c1[i] = parents[0].getGenes()[i];
+            c2[i] = parents[1].getGenes()[i];
+            m1[i] = parents[0].getMutationRates()[i];
+            m2[i] = parents[1].getMutationRates()[i];
+        }
+
+        for (int i = crossOverPoint; i < geneCount; i += 1) {
+            c1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
+            c2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+            m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
+            m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+        }
+        
+        return new Instance[] {
+            new Instance(c1, m1),
+            new Instance(c2, m2)
+        };
+    }
+}
+
+// Implements whole arithmetic recombintation
+class WholeArithmeticRecombination implements ICrossOverOperator
+{
+    private double _weight;
+
+    public WholeArithmeticRecombination(double weight) {
+        this._weight = weight;
+    }
+
+    public Instance[] crossOver(Instance[] parents, Random rnd) {
+        int geneCount = parents[0].getGenes().length;
+
+        double[] c1 = new double[geneCount];
+        double[] c2 = new double[geneCount];
+        double[] m1 = new double[geneCount];
+        double[] m2 = new double[geneCount];
+
+        for (int i = 0; i < geneCount; i += 1) {
+            c1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
+            c2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+            m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
+            m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+        }
+        
+        return new Instance[] {
+            new Instance(c1, m1),
+            new Instance(c2, m2)
+        };
     }
 }
 
