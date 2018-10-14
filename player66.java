@@ -39,10 +39,17 @@ public class player66 implements ContestSubmission
         this._contest = new ContestWrapper(evaluation, evaluations_limit_);
 
 		// Do sth with property values, e.g. specify relevant settings of your algorithm
-        if(isMultimodal){
-            // Do sth
-        }else{
-            // Do sth else
+        if (isMultimodal && !hasStructure && !isSeparable) {
+            // Set the settings for katsuura function.
+        }
+        else if (!isMultimodal && hasStructure && isSeparable) {
+            // Set the settings for the sphere function.
+        }
+        else if (!isMultimodal && !hasStructure && !isSeparable) {
+            // Set the settings for the bent cigar function.
+        }
+        else {
+            // Set the setting for the schaffers function.
         }
     }
 
