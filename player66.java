@@ -56,7 +56,7 @@ public class player66 implements ContestSubmission
 	public void run()
 	{
 		// Initialization
-        IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
+        IMutationOperator mutationOperator = new UniformMutation(0.1); //0.07, 0.22
         ICrossOverOperator crossOverOperator = new SingleArithmeticRecombination(0.3);
         IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
         ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
@@ -454,8 +454,7 @@ class IdentityMutation implements IMutationOperator {
 }
 
 // Implements self adaptive mutation with per gene mutation rates.
-class SelfAdaptiveMutation implements IMutationOperator
-{
+class SelfAdaptiveMutation implements IMutationOperator {
     private double _tau;
     private double _tauPrime;
 
@@ -481,6 +480,24 @@ class SelfAdaptiveMutation implements IMutationOperator
                 Constants.MAX_VALUE,
                 genes[i] + mutationRates[i] * rnd.nextGaussian()
             );
+        }
+    }
+}
+
+//Implements the Uniform Mutation operator
+class UniformMutation implements IMutationOperator {
+    private double _mutationRate;
+
+    public UniformMutation(double mutationRate) {
+        this._mutationRate = mutationRate;
+    }
+    // Give the mutationrate, the chance of mutation.
+    public void mutate(double[] genes, double[] mutationRates, Random rnd){
+        for (int i = 0; i < genes.length; i += 1) {
+            double randomNum = rnd.nextDouble(); // rnd.nextInt(1/mutationRate);
+                if(randomNum < this._mutationRate ){
+                    genes[i] = rnd.nextDouble() * 10.0 - 5.0;
+                }
         }
     }
 }
