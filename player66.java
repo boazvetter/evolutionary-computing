@@ -60,8 +60,8 @@ public class player66 implements ContestSubmission
         ICrossOverOperator crossOverOperator = new SingleArithmeticRecombination(0.3);
         IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
         ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
-        Instance[] population = init_population(100);
-        int offSpringCount = 50;
+        Instance[] population = init_population(30);
+        int offSpringCount = 150;
 
 
         // calculate fitness
@@ -98,6 +98,14 @@ public class player66 implements ContestSubmission
             // Mutation
             for (int i = 0; i < offspring.length; i += 1) {
                 offspring[i].mutate(this.rnd_, mutationOperator);
+            }
+
+            // Evaluate the new offspring
+            for (int i = 0; i < offspring.length && !this._contest.isDone(); i += 1) {
+                this._contest.evaluate(offspring[i]);
+            }
+            if (this._contest.isDone()){
+                break;
             }
 
             // Parent selection
@@ -513,23 +521,30 @@ interface ISurvivorSelectionMethod
 // Implements genetor survivor selection method I.E. replace worst.
 class Genetor implements ISurvivorSelectionMethod
 {
-    public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd)
+    public Instance[] selectSurvivors(Instance[] parents, Instance[] offspring, Random rnd)
     {
-        Instance[] new_population = new Instance[parents.length];
+        Instance[] final_population = new Instance[parents.length];
+        Instance[] temp_population = new Instance[parents.length + offspring.length];
 
-        Arrays.sort(parents);
+        // Fill temporary population array with both parents and offspring
+        System.arraycopy(parents, 0, temp_population, 0, parents.length);
+        System.arraycopy(offspring, 0, temp_population, parents.length, offspring.length);
 
-        // Copy over the children.
-        for (int i = 0; i < children.length; i += 1) {
-            new_population[i] = children[i];
+        // Sort the temporary population by fitness (worst to best)
+        Arrays.sort(temp_population);
+
+        // Reverse order so it becomes best to worst
+        for(int i = 0; i < temp_population.length / 2; i++){
+            Instance temp = temp_population[i];
+            temp_population[i] = temp_population[temp_population.length - i - 1];
+            temp_population[temp_population.length - i - 1] = temp;
         }
 
-        // Copy over the best from the parents.
-        for (int i = children.length; i < parents.length; i += 1) {
-            new_population[i] = parents[i];
-        }
+        // Only keep first μ best individuals
+        // (analogous to throwing away λ worst individuals as discussed in the book)
+        System.arraycopy(temp_population, 0, final_population, 0, parents.length);
 
-        return new_population;
+        return final_population;
     }
 }
 
