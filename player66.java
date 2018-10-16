@@ -10,6 +10,7 @@ public class player66 implements ContestSubmission
 {
 	Random rnd_;
     private ContestWrapper _contest;
+    IMutationOperator mutationOperator;
 
 	public player66()
 	{
@@ -41,22 +42,26 @@ public class player66 implements ContestSubmission
 		// Do sth with property values, e.g. specify relevant settings of your algorithm
         if (isMultimodal && !hasStructure && !isSeparable) {
             // Set the settings for katsuura function.
+            mutationOperator = new UniformMutation(0.1);
         }
         else if (!isMultimodal && hasStructure && isSeparable) {
             // Set the settings for the sphere function.
+            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
         }
         else if (!isMultimodal && !hasStructure && !isSeparable) {
             // Set the settings for the bent cigar function.
+            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
         }
         else {
             // Set the setting for the schaffers function.
+            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
         }
     }
 
 	public void run()
 	{
 		// Initialization
-        IMutationOperator mutationOperator = new UniformMutation(0.1); //0.07, 0.22
+
         ICrossOverOperator crossOverOperator = new SingleArithmeticRecombination(0.3);
         IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
         ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
