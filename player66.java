@@ -178,8 +178,15 @@ class RankBasedSelection implements IParentSelectionOperator
     }
 
     public Instance[] selectParents(Instance[] population, int parentCount, Random rnd) {
-        // Sort them base on their performance.
+        // Sort them base on their performance (from worst to best)
         Arrays.sort(population);
+
+        // Reverse order to make it sorted from best to worst
+        for(int i = 0; i < population.length / 2; i++){
+            Instance temp = population[i];
+            population[i] = population[population.length - i - 1];
+            population[population.length - i - 1] = temp;
+        }
 
         Instance[] selections = new Instance[parentCount];
 
