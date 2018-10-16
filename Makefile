@@ -26,5 +26,5 @@ schaffers: submission testrun.jar
 
 
 .PHONY test-all:
-test-all: katsuura sphere bent-cigar schaffers
+test-all: sphere bent-cigar schaffers katsuura
 
