@@ -57,7 +57,7 @@ public class player66 implements ContestSubmission
 	{
 		// Initialization
         IMutationOperator mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
-        ICrossOverOperator crossOverOperator = new SimpleArithmeticRecombination(0.3);
+        ICrossOverOperator crossOverOperator = new SingleArithmeticRecombination(0.3);
         IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
         ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
         Instance[] population = init_population(100);
@@ -602,10 +602,6 @@ class Instance implements Comparable<Instance>
     }
 
     public void mutate(Random rnd, IMutationOperator mutationOperator) {
-        if (this._fitness != null) {
-            return;
-        }
-
         mutationOperator.mutate(this._genes, this._mutationRates, rnd);
     }
 }
