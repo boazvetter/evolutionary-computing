@@ -63,44 +63,46 @@ public class player66 implements ContestSubmission
         Instance[] population = init_population(100);
         int offSpringCount = 50;
 
-        
-        // calculate fitness       
+
+        // calculate fitness
         while (!this._contest.isDone()) {
             for (int i = 0; i < population.length && !this._contest.isDone(); i += 1) {
                 this._contest.evaluate(population[i]);
             }
 
             // Sort the population according to their fitness.
-            // They are sorted from worst to best.                   
+            // They are sorted from worst to best.
             Arrays.sort(population);
 
             Instance[] new_population = new Instance[population.length];
             System.arraycopy(population, 0, new_population, 0, population.length);
 
-            // Now we make a new population through parent selection and cross over.
-            Instance[] selections = parentSelectionOperator.selectParents(population, offSpringCount, this.rnd_);
+            // Parent selection
+            Instance[] parents = parentSelectionOperator.selectParents(population, offSpringCount, this.rnd_);
 
-            Instance[] offspring = new Instance[selections.length];
-
-            for (int i = 0; i < selections.length; i += 2) {
-                Instance[] children = crossOverOperator.crossOver(
+            // Crossover
+            Instance[] offspring = new Instance[parents.length];
+            for (int i = 0; i < parents.length; i += 2) {
+                Instance[] new_offspring = crossOverOperator.crossOver(
                     new Instance[] {
-                        selections[i],
-                        selections[i + 1]
+                        parents[i],
+                        parents[i + 1]
                     },
                     this.rnd_
                 );
 
-                offspring[i] = children[0];
-                offspring[i + 1] = children[1];
+                offspring[i] = new_offspring[0];
+                offspring[i + 1] = new_offspring[1];
             }
 
+            // Mutation
+            for (int i = 0; i < offspring.length; i += 1) {
+                offspring[i].mutate(this.rnd_, mutationOperator);
+            }
+
+            // Parent selection
             population = survivorSelectionMethod.selectSurvivors(population, offspring, this.rnd_);
 
-            // Perform mutation
-            for (int i = 0; i < population.length; i += 1) {
-                population[i].mutate(this.rnd_, mutationOperator);
-            }
         }
     }
 
@@ -148,34 +150,6 @@ class ContestWrapper
     }
 }
 
-// Common interface for survivor selection methods.
-interface ISurvivorSelectionMethod
-{
-    public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd);
-}
-
-// Implements genetor survivor selection method I.E. replace worst.
-class Genetor implements ISurvivorSelectionMethod
-{
-    public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd)
-    {
-        Instance[] new_population = new Instance[parents.length];
-
-        Arrays.sort(parents);
-
-        // Copy over the children.
-        for (int i = 0; i < children.length; i += 1) {
-            new_population[i] = children[i];
-        }
-
-        // Copy over the best from the parents.
-        for (int i = children.length; i < parents.length; i += 1) {
-            new_population[i] = parents[i];
-        }
-
-        return new_population;
-    }
-}
 
 // Common interface for the parent selection operators.
 interface IParentSelectionOperator
@@ -255,6 +229,9 @@ class UniformSelection implements IParentSelectionOperator
     }
 }
 
+
+
+
 // Common interface for the cross over operator.
 interface ICrossOverOperator
 {
@@ -311,7 +288,7 @@ class SingleArithmeticRecombination implements ICrossOverOperator
                 m2[i] = parents[1].getMutationRates()[i];
             }
         }
-        
+
         return new Instance[] {
             new Instance(c1, m1),
             new Instance(c2, m2)
@@ -350,7 +327,7 @@ class SimpleArithmeticRecombination implements ICrossOverOperator
             m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
             m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
         }
-        
+
         return new Instance[] {
             new Instance(c1, m1),
             new Instance(c2, m2)
@@ -381,7 +358,7 @@ class WholeArithmeticRecombination implements ICrossOverOperator
             m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
             m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
         }
-        
+
         return new Instance[] {
             new Instance(c1, m1),
             new Instance(c2, m2)
@@ -394,7 +371,7 @@ class OnePointCrossOver implements ICrossOverOperator
 {
     public Instance[] crossOver(Instance[] parents, Random rnd) {
         int geneCount = parents[0].getGenes().length;
-        int cross_over_point = rnd.nextInt(geneCount);       
+        int cross_over_point = rnd.nextInt(geneCount);
 
         double[] c1 = new double[geneCount];
         double[] c2 = new double[geneCount];
@@ -414,7 +391,7 @@ class OnePointCrossOver implements ICrossOverOperator
             m1[i] = parents[1].getMutationRates()[i];
             m2[i] = parents[0].getMutationRates()[i];
         }
-        
+
         return new Instance[] {
             new Instance(c1, m1),
             new Instance(c2, m2)
@@ -453,13 +430,15 @@ class UniformCrossOver implements ICrossOverOperator
                 m2[i] = parents[0].getMutationRates()[i];
             }
         }
-        
+
         return new Instance[] {
             new Instance(c1, m1),
             new Instance(c2, m2)
         };
     }
 }
+
+
 
 // The common interface for the mutation operator.
 interface IMutationOperator
@@ -505,6 +484,38 @@ class SelfAdaptiveMutation implements IMutationOperator
         }
     }
 }
+
+
+
+// Common interface for survivor selection methods.
+interface ISurvivorSelectionMethod
+{
+    public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd);
+}
+
+// Implements genetor survivor selection method I.E. replace worst.
+class Genetor implements ISurvivorSelectionMethod
+{
+    public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd)
+    {
+        Instance[] new_population = new Instance[parents.length];
+
+        Arrays.sort(parents);
+
+        // Copy over the children.
+        for (int i = 0; i < children.length; i += 1) {
+            new_population[i] = children[i];
+        }
+
+        // Copy over the best from the parents.
+        for (int i = children.length; i < parents.length; i += 1) {
+            new_population[i] = parents[i];
+        }
+
+        return new_population;
+    }
+}
+
 
 // Utility class to hold usefull functions.
 class Utils {
