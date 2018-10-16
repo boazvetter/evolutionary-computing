@@ -71,16 +71,14 @@ public class player66 implements ContestSubmission
 
         // calculate fitness
         while (!this._contest.isDone()) {
+
+            // Evaluate fitness of all population members
             for (int i = 0; i < population.length && !this._contest.isDone(); i += 1) {
                 this._contest.evaluate(population[i]);
             }
-
-            // Sort the population according to their fitness.
-            // They are sorted from worst to best.
-            Arrays.sort(population);
-
-            Instance[] new_population = new Instance[population.length];
-            System.arraycopy(population, 0, new_population, 0, population.length);
+            if (this._contest.isDone()){
+                break;
+            }
 
             // Parent selection
             Instance[] parents = parentSelectionOperator.selectParents(population, offSpringCount, this.rnd_);
