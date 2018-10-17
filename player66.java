@@ -112,7 +112,7 @@ public class player66 implements ContestSubmission
                 break;
             }
 
-            // Parent selection
+            // Survivor selection
             population = survivorSelectionMethod.selectSurvivors(population, offspring, this.rnd_);
 
         }
@@ -139,21 +139,21 @@ class ContestWrapper
 {
     private ContestEvaluation _contest;
     private int _evaluationLimit;
-    private int _evauationCount;
+    private int _evaluationCount;
 
     public ContestWrapper(ContestEvaluation contest, int evaluationLimit) {
         this._contest = contest;
         this._evaluationLimit = evaluationLimit;
-        this._evauationCount = 0;
+        this._evaluationCount = 0;
     }
 
     public boolean isDone() {
-        return this._evaluationLimit == this._evauationCount;
+        return this._evaluationLimit == this._evaluationCount;
     }
 
     public double evaluate(Instance instance) {
         if (!instance.hasFitness()) {
-            this._evauationCount += 1;
+            this._evaluationCount += 1;
             return instance.calculate_fitness(this._contest);
         }
         else {
@@ -183,11 +183,7 @@ class RankBasedSelection implements IParentSelectionOperator
         Arrays.sort(population);
 
         // Reverse order to make it sorted from best to worst
-        for(int i = 0; i < population.length / 2; i++){
-            Instance temp = population[i];
-            population[i] = population[population.length - i - 1];
-            population[population.length - i - 1] = temp;
-        }
+        population = Utils.reversePopulationOrder(population);
 
         Instance[] selections = new Instance[parentCount];
 
@@ -197,6 +193,7 @@ class RankBasedSelection implements IParentSelectionOperator
             double p = (2 - this._selectionWeight) / population.length;
             probabilities[i] = p + (2 * i * (this._selectionWeight - 1)) / (population.length * (population.length - 1));
         }
+
 
         for (int i = 0; i < parentCount; i += 1) {
             selections[i] = population[Utils.rouletteWheelSelection(probabilities, rnd)];
@@ -266,7 +263,7 @@ class IdentityCrossOver implements ICrossOverOperator
 
         for (int i = 0; i < parents.length; i += 1) {
             children[i] = new Instance(
-                parents[i].getGenes(),
+                parents[i].getGene(),
                 parents[i].getMutationRates()
             );
         }
@@ -285,7 +282,7 @@ class SingleArithmeticRecombination implements ICrossOverOperator
     }
 
     public Instance[] crossOver(Instance[] parents, Random rnd) {
-        int geneCount = parents[0].getGenes().length;
+        int geneCount = parents[0].getGene().length;
         int crossOverPoint = rnd.nextInt(geneCount);
 
         double[] c1 = new double[geneCount];
@@ -295,14 +292,14 @@ class SingleArithmeticRecombination implements ICrossOverOperator
 
         for (int i = 0; i < geneCount; i += 1) {
             if (i == crossOverPoint) {
-                c1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
-                c2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
-                m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
-                m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+                c1[i] = parents[0].getGene()[i] * this._weight + parents[1].getGene()[i] * (1 - this._weight);
+                c2[i] = parents[1].getGene()[i] * this._weight + parents[0].getGene()[i] * (1 - this._weight);
+                m1[i] = parents[0].getGene()[i] * this._weight + parents[1].getGene()[i] * (1 - this._weight);
+                m2[i] = parents[1].getGene()[i] * this._weight + parents[0].getGene()[i] * (1 - this._weight);
             }
             else {
-                c1[i] = parents[0].getGenes()[i];
-                c2[i] = parents[1].getGenes()[i];
+                c1[i] = parents[0].getGene()[i];
+                c2[i] = parents[1].getGene()[i];
                 m1[i] = parents[0].getMutationRates()[i];
                 m2[i] = parents[1].getMutationRates()[i];
             }
@@ -325,7 +322,7 @@ class SimpleArithmeticRecombination implements ICrossOverOperator
     }
 
     public Instance[] crossOver(Instance[] parents, Random rnd) {
-        int geneCount = parents[0].getGenes().length;
+        int geneCount = parents[0].getGene().length;
         int crossOverPoint = rnd.nextInt(geneCount);
 
         double[] c1 = new double[geneCount];
@@ -334,17 +331,17 @@ class SimpleArithmeticRecombination implements ICrossOverOperator
         double[] m2 = new double[geneCount];
 
         for (int i = 0; i < crossOverPoint; i += 1) {
-            c1[i] = parents[0].getGenes()[i];
-            c2[i] = parents[1].getGenes()[i];
+            c1[i] = parents[0].getGene()[i];
+            c2[i] = parents[1].getGene()[i];
             m1[i] = parents[0].getMutationRates()[i];
             m2[i] = parents[1].getMutationRates()[i];
         }
 
         for (int i = crossOverPoint; i < geneCount; i += 1) {
-            c1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
-            c2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
-            m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
-            m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+            c1[i] = parents[0].getGene()[i] * this._weight + parents[1].getGene()[i] * (1 - this._weight);
+            c2[i] = parents[1].getGene()[i] * this._weight + parents[0].getGene()[i] * (1 - this._weight);
+            m1[i] = parents[0].getGene()[i] * this._weight + parents[1].getGene()[i] * (1 - this._weight);
+            m2[i] = parents[1].getGene()[i] * this._weight + parents[0].getGene()[i] * (1 - this._weight);
         }
 
         return new Instance[] {
@@ -364,7 +361,7 @@ class WholeArithmeticRecombination implements ICrossOverOperator
     }
 
     public Instance[] crossOver(Instance[] parents, Random rnd) {
-        int geneCount = parents[0].getGenes().length;
+        int geneCount = parents[0].getGene().length;
 
         double[] c1 = new double[geneCount];
         double[] c2 = new double[geneCount];
@@ -372,10 +369,10 @@ class WholeArithmeticRecombination implements ICrossOverOperator
         double[] m2 = new double[geneCount];
 
         for (int i = 0; i < geneCount; i += 1) {
-            c1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
-            c2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
-            m1[i] = parents[0].getGenes()[i] * this._weight + parents[1].getGenes()[i] * (1 - this._weight);
-            m2[i] = parents[1].getGenes()[i] * this._weight + parents[0].getGenes()[i] * (1 - this._weight);
+            c1[i] = parents[0].getGene()[i] * this._weight + parents[1].getGene()[i] * (1 - this._weight);
+            c2[i] = parents[1].getGene()[i] * this._weight + parents[0].getGene()[i] * (1 - this._weight);
+            m1[i] = parents[0].getGene()[i] * this._weight + parents[1].getGene()[i] * (1 - this._weight);
+            m2[i] = parents[1].getGene()[i] * this._weight + parents[0].getGene()[i] * (1 - this._weight);
         }
 
         return new Instance[] {
@@ -389,7 +386,7 @@ class WholeArithmeticRecombination implements ICrossOverOperator
 class OnePointCrossOver implements ICrossOverOperator
 {
     public Instance[] crossOver(Instance[] parents, Random rnd) {
-        int geneCount = parents[0].getGenes().length;
+        int geneCount = parents[0].getGene().length;
         int cross_over_point = rnd.nextInt(geneCount);
 
         double[] c1 = new double[geneCount];
@@ -398,15 +395,15 @@ class OnePointCrossOver implements ICrossOverOperator
         double[] m2 = new double[geneCount];
 
         for (int i = 0; i < cross_over_point; i += 1) {
-            c1[i] = parents[0].getGenes()[i];
-            c2[i] = parents[1].getGenes()[i];
+            c1[i] = parents[0].getGene()[i];
+            c2[i] = parents[1].getGene()[i];
             m1[i] = parents[0].getMutationRates()[i];
             m2[i] = parents[1].getMutationRates()[i];
         }
 
         for (int i = cross_over_point; i < geneCount; i += 1) {
-            c1[i] = parents[1].getGenes()[i];
-            c2[i] = parents[0].getGenes()[i];
+            c1[i] = parents[1].getGene()[i];
+            c2[i] = parents[0].getGene()[i];
             m1[i] = parents[1].getMutationRates()[i];
             m2[i] = parents[0].getMutationRates()[i];
         }
@@ -428,7 +425,7 @@ class UniformCrossOver implements ICrossOverOperator
     }
 
     public Instance[] crossOver(Instance[] parents, Random rnd) {
-        int geneCount = parents[0].getGenes().length;
+        int geneCount = parents[0].getGene().length;
 
         double[] c1 = new double[geneCount];
         double[] c2 = new double[geneCount];
@@ -437,14 +434,14 @@ class UniformCrossOver implements ICrossOverOperator
 
         for (int i = 0; i < geneCount; i += 1) {
             if (rnd.nextDouble() < this._crossOverProbabilty) {
-                c1[i] = parents[0].getGenes()[i];
-                c2[i] = parents[1].getGenes()[i];
+                c1[i] = parents[0].getGene()[i];
+                c2[i] = parents[1].getGene()[i];
                 m1[i] = parents[0].getMutationRates()[i];
                 m2[i] = parents[1].getMutationRates()[i];
             }
             else {
-                c1[i] = parents[1].getGenes()[i];
-                c2[i] = parents[0].getGenes()[i];
+                c1[i] = parents[1].getGene()[i];
+                c2[i] = parents[0].getGene()[i];
                 m1[i] = parents[1].getMutationRates()[i];
                 m2[i] = parents[0].getMutationRates()[i];
             }
@@ -570,12 +567,7 @@ class CommaSelection implements ISurvivorSelectionMethod
         Arrays.sort(offspring);
 
         // Reverse order so it becomes best to worst
-        // offspring = Utils.reversePopulationOrder(offspring);
-
-        // for (int i = 0; i < offspring.length; i += 1){
-        //     System.out.println(offspring[i].getFitness());
-        // }
-        // System.out.println(" ");
+        offspring = Utils.reversePopulationOrder(offspring);
 
         // Only keep first μ best individuals of offspring
         System.arraycopy(offspring, 0, final_population, 0, parents.length);
@@ -634,18 +626,18 @@ class Constants {
 // Class that keeps track of all the information pertaining a single individual.
 class Instance implements Comparable<Instance>
 {
-    private double[] _genes;
+    private double[] _gene;
     private Double _fitness;
     private Instance[] _parents;
     private double[] _mutationRates;
 
     public Instance(double[] genes, double[] mutationRates) {
-        this._genes = genes;
+        this._gene = genes;
         this._mutationRates = mutationRates;
     }
 
     public Instance(double[] genes, Instance[] parents, double[] mutationRates) {
-        this._genes = genes;
+        this._gene = genes;
         this._parents = parents;
         this._mutationRates = _mutationRates;
     }
@@ -658,8 +650,8 @@ class Instance implements Comparable<Instance>
         return this._fitness;
     }
 
-    public double[] getGenes() {
-        return this._genes;
+    public double[] getGene() {
+        return this._gene;
     }
 
     public double[] getMutationRates() {
@@ -668,7 +660,7 @@ class Instance implements Comparable<Instance>
 
     public double calculate_fitness(ContestEvaluation evaluation) {
         if (this._fitness == null) {
-            this._fitness = (Double)evaluation.evaluate(this._genes);
+            this._fitness = (Double)evaluation.evaluate(this._gene);
         }
 
         return this._fitness;
@@ -679,6 +671,6 @@ class Instance implements Comparable<Instance>
     }
 
     public void mutate(Random rnd, IMutationOperator mutationOperator) {
-        mutationOperator.mutate(this._genes, this._mutationRates, rnd);
+        mutationOperator.mutate(this._gene, this._mutationRates, rnd);
     }
 }
