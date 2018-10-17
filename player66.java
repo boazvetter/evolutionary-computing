@@ -65,56 +65,103 @@ public class player66 implements ContestSubmission
         ICrossOverOperator crossOverOperator = new SingleArithmeticRecombination(0.3);
         IParentSelectionOperator parentSelectionOperator = new RankBasedSelection(1.5);
         ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
+        IParentSelectionOperator migrationSelector = new TournamentSelection(5);
         int offspringCount = 100;
-        int populationCount = 100;
-        Instance[] population = init_population(populationCount);
-
+        int populationCount = 20;
+        int islandCount = 5;
+        int migrationCount = 25;
+        int migrationInterval = 5;
+        Instance[][] islands = new Instance[islandCount][];
+        
+        for (int i = 0; i < islandCount; i += 1) {
+            islands[i] = init_population(populationCount);
+        }
 
         // calculate fitness
+        int generationCount = 0;
+        
         while (!this._contest.isDone()) {
+            generationCount += 1;
 
-            // Evaluate fitness of all population members
-            for (int i = 0; i < population.length && !this._contest.isDone(); i += 1) {
-                this._contest.evaluate(population[i]);
+            for (int k = 0; k < islandCount; k += 1) {
+                Instance[] population = islands[k];
+
+                // Evaluate fitness of all population members
+                for (int i = 0; i < population.length && !this._contest.isDone(); i += 1) {
+                    this._contest.evaluate(population[i]);
+                }
+                if (this._contest.isDone()){
+                    break;
+                }
+
+                Instance[] parents;
+
+                if (generationCount % migrationInterval == 0) {
+                    // Perform migration.
+                    int candidateSize = migrationCount * (islandCount - 1) + population.length;
+                    Instance[] candidates = new Instance[candidateSize];
+
+                    for (int i = 0; i < population.length; i += 1) {
+                        candidates[i] = population[i];
+                    }
+
+                    for (int i = 0; i < islandCount; i += 1) {
+                        if (i < k) {
+                            Instance[] selection = migrationSelector.selectParents(islands[i], migrationCount, this.rnd_);
+
+                            for (int j = 0; j < selection.length; j += 1) {
+                                candidates[population.length + (i * migrationCount) + j] = selection[j];
+                            }
+                        }
+                        else if (i > k) {
+                            Instance[] selection = migrationSelector.selectParents(islands[i], migrationCount, this.rnd_);
+
+                            for (int j = 0; j < selection.length; j += 1) {
+                                candidates[population.length + ((i - 1) * migrationCount) + j] = selection[j];
+                            }
+                        }
+                    }
+
+                    parents = parentSelectionOperator.selectParents(candidates, offspringCount, this.rnd_);
+                }
+                else {
+                    // Parent selection
+                    parents = parentSelectionOperator.selectParents(population, offspringCount, this.rnd_);
+                }
+
+                // Crossover
+                Instance[] offspring = new Instance[parents.length];
+                for (int i = 0; i < parents.length; i += 2) {
+                    Instance[] new_offspring = crossOverOperator.crossOver(
+                        new Instance[] {
+                            parents[i],
+                            parents[i + 1]
+                        },
+                        this.rnd_
+                    );
+
+                    offspring[i] = new_offspring[0];
+                    offspring[i + 1] = new_offspring[1];
+                }
+
+                // Mutation
+                for (int i = 0; i < offspring.length; i += 1) {
+                    offspring[i].mutate(this.rnd_, mutationOperator);
+                }
+
+                // Evaluate the new offspring
+                for (int i = 0; i < offspring.length && !this._contest.isDone(); i += 1) {
+                    this._contest.evaluate(offspring[i]);
+                }
+                if (this._contest.isDone()){
+                    break;
+                }
+
+                // Survivor selection
+                population = survivorSelectionMethod.selectSurvivors(population, offspring, this.rnd_);
+
+                islands[k] = population;
             }
-            if (this._contest.isDone()){
-                break;
-            }
-
-            // Parent selection
-            Instance[] parents = parentSelectionOperator.selectParents(population, offspringCount, this.rnd_);
-
-            // Crossover
-            Instance[] offspring = new Instance[parents.length];
-            for (int i = 0; i < parents.length; i += 2) {
-                Instance[] new_offspring = crossOverOperator.crossOver(
-                    new Instance[] {
-                        parents[i],
-                        parents[i + 1]
-                    },
-                    this.rnd_
-                );
-
-                offspring[i] = new_offspring[0];
-                offspring[i + 1] = new_offspring[1];
-            }
-
-            // Mutation
-            for (int i = 0; i < offspring.length; i += 1) {
-                offspring[i].mutate(this.rnd_, mutationOperator);
-            }
-
-            // Evaluate the new offspring
-            for (int i = 0; i < offspring.length && !this._contest.isDone(); i += 1) {
-                this._contest.evaluate(offspring[i]);
-            }
-            if (this._contest.isDone()){
-                break;
-            }
-
-            // Survivor selection
-            population = survivorSelectionMethod.selectSurvivors(population, offspring, this.rnd_);
-
         }
     }
 
