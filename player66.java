@@ -179,11 +179,13 @@ class RankBasedSelection implements IParentSelectionOperator
     }
 
     public Instance[] selectParents(Instance[] population, int parentCount, Random rnd) {
+
+        if (this._selectionWeight < 1.0 && this._selectionWeight > 2.0){
+            throw new IllegalArgumentException("Selection pressure should be between 1.0 and 2.0");;
+        }
+
         // Sort them base on their performance (from worst to best)
         Arrays.sort(population);
-
-        // Reverse order to make it sorted from best to worst
-        population = Utils.reversePopulationOrder(population);
 
         Instance[] selections = new Instance[parentCount];
 
