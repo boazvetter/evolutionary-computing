@@ -63,10 +63,11 @@ public class player66 implements ContestSubmission
 		// Initialization
 
         ICrossOverOperator crossOverOperator = new SingleArithmeticRecombination(0.3);
-        IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
-        ISurvivorSelectionMethod survivorSelectionMethod = new Genetor();
-        Instance[] population = init_population(30);
-        int offSpringCount = 150;
+        IParentSelectionOperator parentSelectionOperator = new RankBasedSelection(0.5);
+        ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
+        int offspringCount = 100;
+        int populationCount = 100;
+        Instance[] population = init_population(populationCount);
 
 
         // calculate fitness
@@ -81,7 +82,7 @@ public class player66 implements ContestSubmission
             }
 
             // Parent selection
-            Instance[] parents = parentSelectionOperator.selectParents(population, offSpringCount, this.rnd_);
+            Instance[] parents = parentSelectionOperator.selectParents(population, offspringCount, this.rnd_);
 
             // Crossover
             Instance[] offspring = new Instance[parents.length];
@@ -528,8 +529,8 @@ interface ISurvivorSelectionMethod
     public Instance[] selectSurvivors(Instance[] parents, Instance[] children, Random rnd);
 }
 
-// Implements genetor survivor selection method I.E. replace worst.
-class Genetor implements ISurvivorSelectionMethod
+// Implements genetor survivor selection method I.E. replace worst (plus selection (μ+λ))
+class GenetorSelection implements ISurvivorSelectionMethod
 {
     public Instance[] selectSurvivors(Instance[] parents, Instance[] offspring, Random rnd)
     {
@@ -553,6 +554,31 @@ class Genetor implements ISurvivorSelectionMethod
         // Only keep first μ best individuals
         // (analogous to throwing away λ worst individuals as discussed in the book)
         System.arraycopy(temp_population, 0, final_population, 0, parents.length);
+
+        return final_population;
+    }
+}
+
+// Implements comma (μ, λ) survivor selection method
+class CommaSelection implements ISurvivorSelectionMethod
+{
+    public Instance[] selectSurvivors(Instance[] parents, Instance[] offspring, Random rnd)
+    {
+        Instance[] final_population = new Instance[parents.length];
+
+        // Sort the offspring by fitness (worst to best)
+        Arrays.sort(offspring);
+
+        // Reverse order so it becomes best to worst
+        // offspring = Utils.reversePopulationOrder(offspring);
+
+        // for (int i = 0; i < offspring.length; i += 1){
+        //     System.out.println(offspring[i].getFitness());
+        // }
+        // System.out.println(" ");
+
+        // Only keep first μ best individuals of offspring
+        System.arraycopy(offspring, 0, final_population, 0, parents.length);
 
         return final_population;
     }
@@ -585,6 +611,15 @@ class Utils {
             }
         }
         return probabilities.length - 1;
+    }
+
+    public static Instance[] reversePopulationOrder(Instance[] myPopulation){
+        for(int i = 0; i < myPopulation.length / 2; i++){
+            Instance temp = myPopulation[i];
+            myPopulation[i] = myPopulation[myPopulation.length - i - 1];
+            myPopulation[myPopulation.length - i - 1] = temp;
+        }
+        return myPopulation;
     }
 }
 
