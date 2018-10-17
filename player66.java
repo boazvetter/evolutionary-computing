@@ -62,7 +62,7 @@ public class player66 implements ContestSubmission
 	{
 		// Initialization
 
-        ICrossOverOperator crossOverOperator = new SingleArithmeticRecombination(0.3);
+        ICrossOverOperator crossOverOperator = new UniformCrossOver(0.3);
         IParentSelectionOperator parentSelectionOperator = new RankBasedSelection(1.5);
         ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
         IParentSelectionOperator migrationSelector = new TournamentSelection(5);
