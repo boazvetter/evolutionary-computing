@@ -158,7 +158,7 @@ if __name__ == "__main__":
         skopt.space.Integer(1, 1000),  # Population size.
         skopt.space.Integer(1, 100),  # Island count.
         skopt.space.Real(0, 100, "uniform"),  # Fraction of population that migrates.
-        skopt.space.Integer(0, 10000)  # Migration interval.
+        skopt.space.Integer(1, 10000)  # Migration interval.
     ]
 
     results = skopt.gp_minimize(
