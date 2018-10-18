@@ -46,15 +46,15 @@ public class player66 implements ContestSubmission
         }
         else if (!isMultimodal && hasStructure && isSeparable) {
             // Set the settings for the sphere function.
-            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
+            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22, 1.0e-9);
         }
         else if (!isMultimodal && !hasStructure && !isSeparable) {
             // Set the settings for the bent cigar function.
-            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
+            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22, 1.0e-9);
         }
         else {
             // Set the setting for the schaffers function.
-            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22);
+            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22, 1.0e-9);
         }
     }
 
@@ -63,13 +63,13 @@ public class player66 implements ContestSubmission
 		// Initialization
 
         ICrossOverOperator crossOverOperator = new UniformCrossOver(0.3);
-        IParentSelectionOperator parentSelectionOperator = new RankBasedSelection(1.5);
+        IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
         ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
-        IParentSelectionOperator migrationSelector = new TournamentSelection(5);
+        IParentSelectionOperator migrationSelector = new TournamentSelection(10);
         int offspringCount = 100;
         int populationCount = 20;
         int islandCount = 5;
-        int migrationCount = 25;
+        int migrationCount = 5;
         int migrationInterval = 5;
         Instance[][] islands = new Instance[islandCount][];
         
@@ -522,10 +522,12 @@ class IdentityMutation implements IMutationOperator {
 class SelfAdaptiveMutation implements IMutationOperator {
     private double _tau;
     private double _tauPrime;
+    private double _mutationBoundary;
 
-    public SelfAdaptiveMutation(double tau, double tauPrime) {
+    public SelfAdaptiveMutation(double tau, double tauPrime, double mutationBoundary) {
         this._tau = _tau;
         this._tauPrime = tauPrime;
+        this._mutationBoundary = mutationBoundary;
     }
 
     public void mutate(double[] genes, double[] mutationRates, Random rnd) {
@@ -536,6 +538,10 @@ class SelfAdaptiveMutation implements IMutationOperator {
         for (int i = 0; i < mutationRates.length; i += 1) {
             double individualMutationRate = this._tau * rnd.nextGaussian();
             mutationRates[i] = mutationRates[i] * Math.exp(globalMutationRate + individualMutationRate);
+
+            if (mutationRates[i] < this._mutationBoundary) {
+                mutationRates[i] = this._mutationBoundary;
+            }
         }
 
         // Now that we have adjusted the mutation rates for each gene we can apply those.
