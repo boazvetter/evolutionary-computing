@@ -72,7 +72,7 @@ public class player66 implements ContestSubmission
         int migrationCount = 25;
         int migrationInterval = 5;
         Instance[][] islands = new Instance[islandCount][];
-        
+
         for (int i = 0; i < islandCount; i += 1) {
             islands[i] = init_population(populationCount);
             for (int j = 0; j < islands[i].length && !this._contest.isDone(); j += 1) {
@@ -82,11 +82,11 @@ public class player66 implements ContestSubmission
 
         Instance[] populationAllIslands = new Instance[islandCount*populationCount];
         // Program is exiting, print some useful information
-        System.out.println("Diversity after initialization:");
+        // System.out.println("Diversity after initialization:");
         for (int i = 0; i < islands.length; i += 1){
             System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
         }
-        System.out.println(calculate_diversity(populationAllIslands));
+        // System.out.println(calculate_diversity(populationAllIslands));
 
 
         // calculate fitness
@@ -184,11 +184,11 @@ public class player66 implements ContestSubmission
         // Program is exiting, print some useful information
         populationAllIslands = new Instance[islandCount*populationCount];
         // Program is exiting, print some useful information
-        System.out.println("Diversity after run:");
+        // System.out.println("Diversity after run:");
         for (int i = 0; i < islands.length; i += 1){
             System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
         }
-        System.out.println(calculate_diversity(populationAllIslands));
+        // System.out.println(calculate_diversity(populationAllIslands));
 
 
     }
