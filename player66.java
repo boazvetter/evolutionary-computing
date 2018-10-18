@@ -96,30 +96,34 @@ public class player66 implements ContestSubmission
 
                 Instance[] parents;
 
+                // Perform migration once in migrationInterval
                 if (generationCount % migrationInterval == 0) {
-                    // Perform migration.
-                    int candidateSize = migrationCount * (islandCount - 1) + population.length;
+
+                    // Migration copies indivuduals, so candidateSize = populationlength + migrators
+                    int candidateSize = population.length + (migrationCount * 2);
                     Instance[] candidates = new Instance[candidateSize];
 
+                    // Fill first part of candidates with population
                     for (int i = 0; i < population.length; i += 1) {
                         candidates[i] = population[i];
                     }
 
-                    for (int i = 0; i < islandCount; i += 1) {
-                        if (i < k) {
-                            Instance[] selection = migrationSelector.selectParents(islands[i], migrationCount, this.rnd_);
-
-                            for (int j = 0; j < selection.length; j += 1) {
-                                candidates[population.length + (i * migrationCount) + j] = selection[j];
-                            }
-                        }
-                        else if (i > k) {
-                            Instance[] selection = migrationSelector.selectParents(islands[i], migrationCount, this.rnd_);
-
-                            for (int j = 0; j < selection.length; j += 1) {
-                                candidates[population.length + ((i - 1) * migrationCount) + j] = selection[j];
-                            }
-                        }
+                    // Fill second part of candidates with migrators from neighbouring islands
+                    int leftNumber = k;
+                    int rightNumber = k;
+                    if (k == 0){
+                        leftNumber = islandCount-1;
+                    }
+                    else if (k == islandCount){
+                        rightNumber = 0;
+                    }
+                    Instance[] left = migrationSelector.selectParents(islands[leftNumber], migrationCount, this.rnd_);
+                    for (int j = 0; j < left.length; j += 1) {
+                        candidates[population.length + j] = left[j];
+                    }
+                    Instance[] right = migrationSelector.selectParents(islands[rightNumber], migrationCount, this.rnd_);
+                    for (int j = 0; j < right.length; j += 1) {
+                        candidates[population.length + migrationCount + j] = right[j];
                     }
 
                     parents = parentSelectionOperator.selectParents(candidates, offspringCount, this.rnd_);
