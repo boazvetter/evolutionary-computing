@@ -183,6 +183,46 @@ public class player66 implements ContestSubmission
 		}
 		return population;
 	}
+
+    public double calculate_diversity(Instance[] population){
+
+        int amountOfAlleles = 10;
+        double[] alleleMean = new double[amountOfAlleles];
+
+        // Calculate mean, per allele, over all individuals
+        for (int i = 0; i < amountOfAlleles; i += 1){
+            double alleleSum = 0.0;
+
+            for (int j = 0; j < population.length; j += 1){
+                alleleSum += population[j].getGene()[i];
+            }
+            alleleMean[i] = alleleSum / population.length;
+        }
+
+        // Calculate average standard deviation, per allele, over all individuals
+        double[] totalAlleleStd = new double[amountOfAlleles];
+        double[] meanAlleleStd = new double[amountOfAlleles];
+        double differenceOfMean = 0.0;
+        double alleleVariance = 0.0;
+
+        for (int i = 0; i < amountOfAlleles; i += 1){
+            for (int j = 0; j < population.length; j += 1){
+                differenceOfMean = alleleMean[i] - population[j].getGene()[i];
+                alleleVariance = (differenceOfMean * differenceOfMean) / population.length;
+                totalAlleleStd[i] = totalAlleleStd[i] + Math.sqrt(alleleVariance);
+            }
+            meanAlleleStd[i] = totalAlleleStd[i] / population.length;
+        }
+
+        // Take mean of standard deviation per allele
+        double sum = 0.0;
+        for (int i = 0; i < amountOfAlleles; i += 1){
+            sum += meanAlleleStd[i];
+        }
+
+        return sum / amountOfAlleles;
+
+    }
 }
 
 // Handy class to keep track of the amount of evaluations that have been performed.
