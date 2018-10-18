@@ -42,7 +42,7 @@ public class player66 implements ContestSubmission
 		// Do sth with property values, e.g. specify relevant settings of your algorithm
         if (isMultimodal && !hasStructure && !isSeparable) {
             // Set the settings for katsuura function.
-            mutationOperator = new UniformMutation(0.1);
+            mutationOperator = new UniformMutation(Double.parseDouble(System.getProperty("mutationRate")));
         }
         else if (!isMultimodal && hasStructure && isSeparable) {
             // Set the settings for the sphere function.
@@ -62,15 +62,15 @@ public class player66 implements ContestSubmission
 	{
 		// Initialization
 
-        ICrossOverOperator crossOverOperator = new UniformCrossOver(0.3);
-        IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
+        ICrossOverOperator crossOverOperator = new UniformCrossOver(Double.parseDouble(System.getProperty("crossOverRate")));
+        IParentSelectionOperator parentSelectionOperator = new TournamentSelection(Integer.parseInt(System.getProperty("parentTournamentSize")));
         ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
-        IParentSelectionOperator migrationSelector = new TournamentSelection(10);
-        int offspringCount = 100;
-        int populationCount = 20;
-        int islandCount = 5;
-        int migrationCount = 5;
-        int migrationInterval = 5;
+        IParentSelectionOperator migrationSelector = new TournamentSelection(Integer.parseInt(System.getProperty("migrationTournamentSize")));
+        int offspringCount = Integer.parseInt(System.getProperty("offspringCount"));
+        int populationCount = Integer.parseInt(System.getProperty("populationCount"));
+        int islandCount = Integer.parseInt(System.getProperty("islandCount"));
+        int migrationCount = Integer.parseInt(System.getProperty("migrationCount"));
+        int migrationInterval = Integer.parseInt(System.getProperty("migrationInterval"));
         Instance[][] islands = new Instance[islandCount][];
         
         for (int i = 0; i < islandCount; i += 1) {
@@ -90,6 +90,7 @@ public class player66 implements ContestSubmission
                 for (int i = 0; i < population.length && !this._contest.isDone(); i += 1) {
                     this._contest.evaluate(population[i]);
                 }
+
                 if (this._contest.isDone()){
                     break;
                 }
