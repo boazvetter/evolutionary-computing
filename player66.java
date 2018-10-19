@@ -132,8 +132,8 @@ public class player66 implements ContestSubmission
                         }
                     }
                     // Fill second part of candidates with migrators from neighbouring islands
-                    int leftNumber = k;
-                    int rightNumber = k;
+                    int leftNumber = k - 1;
+                    int rightNumber = k + 1;
                     if (k == 0) {
                         leftNumber = islandCount - 1;
                     }
