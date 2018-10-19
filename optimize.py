@@ -26,9 +26,13 @@ def format_args(args):
 
 ITERATION = 0
 
-def get_func(num_runs, num_jobs, function_name):
-    score_file = open("{0!s}.scores.csv".format(function_name), "w")
-    settings_file = open("{0!s}-settings.csv".format(function_name), "w")
+def get_func(num_runs, num_jobs, function_name, no_islands):
+    if no_islands:
+        score_file = open("{0!s}-no-islands.scores.csv".format(function_name), "w")
+        settings_file = open("{0!s}-no-islands.settings.csv".format(function_name), "w")
+    else:
+        score_file = open("{0!s}.scores.csv".format(function_name), "w")
+        settings_file = open("{0!s}.settings.csv".format(function_name), "w")
 
     score_writer = csv.DictWriter(score_file, fieldnames=["iteration", "run", "score"])
     settings_writer = csv.DictWriter(settings_file, fieldnames=["iteration"] + setting_names)
@@ -45,10 +49,17 @@ def get_func(num_runs, num_jobs, function_name):
         parent_tournament_size = int(np.maximum(1, parameters[2] * population_count))
         migration_tournament_size = int(np.maximum(1, parameters[3] * population_count))
         offspring_count = int(np.ceil(parameters[4] * population_count) / 2) * 2
-        island_count = parameters[6]
+        if no_islands:
+            island_count = 1
+            migration_interval = 2*20
+        else:
+            island_count = parameters[6]
+            migration_interval = parameters[8]
         migration_count = int(np.round(parameters[7] * population_count))
-        migration_interval = parameters[8]
 
+        tau = parameter[9]
+        tau_prime = parameter[10]
+        adaptation_boundary = parameter[11]
 
         parameter_settings = {
             "populationCount": population_count,
@@ -59,7 +70,10 @@ def get_func(num_runs, num_jobs, function_name):
             "offspringCount": offspring_count,
             "islandCount": island_count,
             "migrationCount": migration_count,
-            "migrationInterval": migration_interval
+            "migrationInterval": migration_interval,
+            "tau": tau,
+            "tauPrime": tau_prime,
+            "adaptationBoundary": adaptation_boundary
         }
 
         settings_writer.writerow(
@@ -144,6 +158,10 @@ if __name__ == "__main__":
         "--n-jobs", type=int, default=4, required=False,
         help="The amount of concurrent runs to perform."
     )
+    parser.add_argument(
+        "--no-islands", default=False, action="store_true",
+        help="Disable the island model."
+    )
 
     args = parser.parse_args()
 
@@ -159,10 +177,13 @@ if __name__ == "__main__":
         skopt.space.Integer(1, 100),  # Island count.
         skopt.space.Real(0, 100, "uniform"),  # Fraction of population that migrates.
         skopt.space.Integer(1, 10000)  # Migration interval.
+        skopt.space.Real(0, 10, "uniform"),  # The self adaptive tau parameter.
+        skopt.space.Real(0, 10, "uniform"),  # The self adaptive tau prime parameter.
+        skopt.space.Real(1.0-15, 10, "log-uniform"),  # The mutation boundary parameter.
     ]
 
     results = skopt.gp_minimize(
-        get_func(args.num_runs, args.n_jobs, args.function),
+        get_func(args.num_runs, args.n_jobs, args.function, args.no_islands),
         optimization_space,
         n_random_starts=args.num_random_trials,
         n_calls=args.num_trials,
