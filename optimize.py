@@ -17,7 +17,10 @@ setting_names = [
     "migrationTournamentSize",
     "islandCount",
     "migrationCount",
-    "migrationInterval"
+    "migrationInterval",
+    "tau",
+    "tauPrime",
+    "adaptationBoundary"
 ]
 
 def format_args(args):
@@ -48,7 +51,7 @@ def get_func(num_runs, num_jobs, function_name, no_islands):
         cross_over_rate = parameters[1]
         parent_tournament_size = int(np.maximum(1, parameters[2] * population_count))
         migration_tournament_size = int(np.maximum(1, parameters[3] * population_count))
-        offspring_count = int(np.ceil(parameters[4] * population_count) / 2) * 2
+        offspring_count = int(np.ceil(parameters[4] * population_count / 2)) * 2
         if no_islands:
             island_count = 1
             migration_interval = 2*20
@@ -57,9 +60,9 @@ def get_func(num_runs, num_jobs, function_name, no_islands):
             migration_interval = parameters[8]
         migration_count = int(np.round(parameters[7] * population_count))
 
-        tau = parameter[9]
-        tau_prime = parameter[10]
-        adaptation_boundary = parameter[11]
+        tau = parameters[9]
+        tau_prime = parameters[10]
+        adaptation_boundary = parameters[11]
 
         parameter_settings = {
             "populationCount": population_count,
@@ -101,8 +104,7 @@ def get_func(num_runs, num_jobs, function_name, no_islands):
                 processes.append(
                     subprocess.Popen(
                         args,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE
+                        stdout=subprocess.PIPE
                     )
                 )
 
@@ -175,11 +177,11 @@ if __name__ == "__main__":
         skopt.space.Real(1, 100, "log-uniform"),  # Offspring factor.
         skopt.space.Integer(1, 1000),  # Population size.
         skopt.space.Integer(1, 100),  # Island count.
-        skopt.space.Real(0, 100, "uniform"),  # Fraction of population that migrates.
-        skopt.space.Integer(1, 10000)  # Migration interval.
-        skopt.space.Real(0, 10, "uniform"),  # The self adaptive tau parameter.
-        skopt.space.Real(0, 10, "uniform"),  # The self adaptive tau prime parameter.
-        skopt.space.Real(1.0-15, 10, "log-uniform"),  # The mutation boundary parameter.
+        skopt.space.Real(0, 1, "uniform"),  # Fraction of population that migrates.
+        skopt.space.Integer(1, 10000),  # Migration interval.
+        skopt.space.Real(1.0e-15, 10, "log-uniform"),  # The self adaptive tau parameter.
+        skopt.space.Real(1.0e-15, 10, "log-uniform"),  # The self adaptive tau prime parameter.
+        skopt.space.Real(1.0e-15, 10, "log-uniform")  # The mutation boundary parameter.
     ]
 
     results = skopt.gp_minimize(
