@@ -109,7 +109,7 @@ public class player66 implements ContestSubmission
                 Instance[] parents;
 
                 // Perform migration once in migrationInterval
-                if (generationCount % migrationInterval == 0) {
+                if (generationCount % migrationInterval == 0 && islandCount > 1) {
 
                     // Migration copies indivuduals, so candidateSize = populationlength + migrators
                     int candidateSize = population.length + (migrationCount * 2);
@@ -121,8 +121,8 @@ public class player66 implements ContestSubmission
                     }
 
                     // Fill second part of candidates with migrators from neighbouring islands
-                    int leftNumber = k;
-                    int rightNumber = k;
+                    int leftNumber = k - 1;
+                    int rightNumber = k + 1;
                     if (k == 0){
                         leftNumber = islandCount-1;
                     }
