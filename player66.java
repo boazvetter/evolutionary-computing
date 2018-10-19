@@ -126,7 +126,7 @@ public class player66 implements ContestSubmission
                     if (k == 0){
                         leftNumber = islandCount-1;
                     }
-                    else if (k == islandCount){
+                    else if (k == islandCount - 1){
                         rightNumber = 0;
                     }
                     Instance[] left = migrationSelector.selectParents(islands[leftNumber], migrationCount, this.rnd_);
