@@ -97,7 +97,7 @@ public class player66 implements ContestSubmission
 
             for (int k = 0; k < islandCount; k += 1) {
                 Instance[] population = islands[k];
-
+                calculate_diversity(population);
                 // Evaluate fitness of all population members
                 for (int i = 0; i < population.length && !this._contest.isDone(); i += 1) {
                     this._contest.evaluate(population[i]);
@@ -225,25 +225,27 @@ public class player66 implements ContestSubmission
 
         // Calculate average standard deviation, per allele, over all individuals
         double[] totalAlleleStd = new double[amountOfAlleles];
-        double[] meanAlleleStd = new double[amountOfAlleles];
         double differenceOfMean = 0.0;
         double alleleVariance = 0.0;
 
         for (int i = 0; i < amountOfAlleles; i += 1){
             for (int j = 0; j < population.length; j += 1){
                 differenceOfMean = alleleMean[i] - population[j].getGene()[i];
-                alleleVariance = (differenceOfMean * differenceOfMean) / population.length;
-                totalAlleleStd[i] = totalAlleleStd[i] + Math.sqrt(alleleVariance);
+                alleleVariance = (differenceOfMean * differenceOfMean) / (population.length-1);
+                totalAlleleStd[i] = totalAlleleStd[i] + alleleVariance;
+                
             }
-            meanAlleleStd[i] = totalAlleleStd[i] / population.length;
+
+            totalAlleleStd[i] = Math.sqrt(totalAlleleStd[i]);
+
         }
 
         // Take mean of standard deviation per allele
         double sum = 0.0;
         for (int i = 0; i < amountOfAlleles; i += 1){
-            sum += meanAlleleStd[i];
+            sum += totalAlleleStd[i];
         }
-
+        System.out.println(sum/amountOfAlleles);
         return sum / amountOfAlleles;
 
     }
