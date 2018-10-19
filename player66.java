@@ -72,14 +72,26 @@ public class player66 implements ContestSubmission
         int migrationCount = 5;
         int migrationInterval = 5;
         Instance[][] islands = new Instance[islandCount][];
-        
+
         for (int i = 0; i < islandCount; i += 1) {
             islands[i] = init_population(populationCount);
+            for (int j = 0; j < islands[i].length && !this._contest.isDone(); j += 1) {
+                this._contest.evaluate(islands[i][j]);
+            }
         }
+
+        Instance[] populationAllIslands = new Instance[islandCount*populationCount];
+        // Program is exiting, print some useful information
+        // System.out.println("Diversity after initialization:");
+        for (int i = 0; i < islands.length; i += 1){
+            System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
+        }
+        // System.out.println(calculate_diversity(populationAllIslands));
+
 
         // calculate fitness
         int generationCount = 0;
-        
+
         while (!this._contest.isDone()) {
             generationCount += 1;
 
@@ -96,30 +108,34 @@ public class player66 implements ContestSubmission
 
                 Instance[] parents;
 
+                // Perform migration once in migrationInterval
                 if (generationCount % migrationInterval == 0) {
-                    // Perform migration.
-                    int candidateSize = migrationCount * (islandCount - 1) + population.length;
+
+                    // Migration copies indivuduals, so candidateSize = populationlength + migrators
+                    int candidateSize = population.length + (migrationCount * 2);
                     Instance[] candidates = new Instance[candidateSize];
 
+                    // Fill first part of candidates with population
                     for (int i = 0; i < population.length; i += 1) {
                         candidates[i] = population[i];
                     }
 
-                    for (int i = 0; i < islandCount; i += 1) {
-                        if (i < k) {
-                            Instance[] selection = migrationSelector.selectParents(islands[i], migrationCount, this.rnd_);
-
-                            for (int j = 0; j < selection.length; j += 1) {
-                                candidates[population.length + (i * migrationCount) + j] = selection[j];
-                            }
-                        }
-                        else if (i > k) {
-                            Instance[] selection = migrationSelector.selectParents(islands[i], migrationCount, this.rnd_);
-
-                            for (int j = 0; j < selection.length; j += 1) {
-                                candidates[population.length + ((i - 1) * migrationCount) + j] = selection[j];
-                            }
-                        }
+                    // Fill second part of candidates with migrators from neighbouring islands
+                    int leftNumber = k;
+                    int rightNumber = k;
+                    if (k == 0){
+                        leftNumber = islandCount-1;
+                    }
+                    else if (k == islandCount){
+                        rightNumber = 0;
+                    }
+                    Instance[] left = migrationSelector.selectParents(islands[leftNumber], migrationCount, this.rnd_);
+                    for (int j = 0; j < left.length; j += 1) {
+                        candidates[population.length + j] = left[j];
+                    }
+                    Instance[] right = migrationSelector.selectParents(islands[rightNumber], migrationCount, this.rnd_);
+                    for (int j = 0; j < right.length; j += 1) {
+                        candidates[population.length + migrationCount + j] = right[j];
                     }
 
                     parents = parentSelectionOperator.selectParents(candidates, offspringCount, this.rnd_);
@@ -163,6 +179,18 @@ public class player66 implements ContestSubmission
                 islands[k] = population;
             }
         }
+
+
+        // Program is exiting, print some useful information
+        populationAllIslands = new Instance[islandCount*populationCount];
+        // Program is exiting, print some useful information
+        // System.out.println("Diversity after run:");
+        for (int i = 0; i < islands.length; i += 1){
+            System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
+        }
+        // System.out.println(calculate_diversity(populationAllIslands));
+
+
     }
 
 	public Instance[] init_population(int n){
@@ -179,6 +207,46 @@ public class player66 implements ContestSubmission
 		}
 		return population;
 	}
+
+    public double calculate_diversity(Instance[] population){
+
+        int amountOfAlleles = 10;
+        double[] alleleMean = new double[amountOfAlleles];
+
+        // Calculate mean, per allele, over all individuals
+        for (int i = 0; i < amountOfAlleles; i += 1){
+            double alleleSum = 0.0;
+
+            for (int j = 0; j < population.length; j += 1){
+                alleleSum += population[j].getGene()[i];
+            }
+            alleleMean[i] = alleleSum / population.length;
+        }
+
+        // Calculate average standard deviation, per allele, over all individuals
+        double[] totalAlleleStd = new double[amountOfAlleles];
+        double[] meanAlleleStd = new double[amountOfAlleles];
+        double differenceOfMean = 0.0;
+        double alleleVariance = 0.0;
+
+        for (int i = 0; i < amountOfAlleles; i += 1){
+            for (int j = 0; j < population.length; j += 1){
+                differenceOfMean = alleleMean[i] - population[j].getGene()[i];
+                alleleVariance = (differenceOfMean * differenceOfMean) / population.length;
+                totalAlleleStd[i] = totalAlleleStd[i] + Math.sqrt(alleleVariance);
+            }
+            meanAlleleStd[i] = totalAlleleStd[i] / population.length;
+        }
+
+        // Take mean of standard deviation per allele
+        double sum = 0.0;
+        for (int i = 0; i < amountOfAlleles; i += 1){
+            sum += meanAlleleStd[i];
+        }
+
+        return sum / amountOfAlleles;
+
+    }
 }
 
 // Handy class to keep track of the amount of evaluations that have been performed.
