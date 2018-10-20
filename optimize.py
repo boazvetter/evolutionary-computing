@@ -178,7 +178,7 @@ if __name__ == "__main__":
         skopt.space.Integer(1, 1000),  # Population size.
         skopt.space.Integer(1, 100),  # Island count.
         skopt.space.Real(0, 1, "uniform"),  # Fraction of population that migrates.
-        skopt.space.Integer(1, 10000),  # Migration interval.
+        skopt.space.Integer(2, 10000),  # Migration interval.
         skopt.space.Real(1.0e-15, 10, "log-uniform"),  # The self adaptive tau parameter.
         skopt.space.Real(1.0e-15, 10, "log-uniform"),  # The self adaptive tau prime parameter.
         skopt.space.Real(1.0e-15, 10, "log-uniform")  # The mutation boundary parameter.
