@@ -11,6 +11,15 @@ public class player66 implements ContestSubmission
 	Random rnd_;
     private ContestWrapper _contest;
     IMutationOperator mutationOperator;
+    ICrossOverOperator crossOverOperator;
+    IParentSelectionOperator parentSelectionOperator;
+    ISurvivorSelectionMethod survivorSelectionMethod;
+    IParentSelectionOperator migrationSelector;
+    int offspringCount;
+    int populationCount;
+    int islandCount;
+    int migrationCount;
+    int migrationInterval;
 
 	public player66()
 	{
@@ -39,6 +48,8 @@ public class player66 implements ContestSubmission
 
         this._contest = new ContestWrapper(evaluation, evaluations_limit_);
 
+        survivorSelectionMethod = new CommaSelection();
+
 		// Do sth with property values, e.g. specify relevant settings of your algorithm
         if (isMultimodal && !hasStructure && !isSeparable) {
             // Set the settings for katsuura function.
@@ -53,20 +64,39 @@ public class player66 implements ContestSubmission
             );
         }
         else if (!isMultimodal && !hasStructure && !isSeparable) {
+            
             // Set the settings for the bent cigar function.
             mutationOperator = new SelfAdaptiveMutation(
-                Double.parseDouble(System.getProperty("tau")),
-                Double.parseDouble(System.getProperty("tauPrime")),
-                Double.parseDouble(System.getProperty("adaptationBoundary"))
+                0.0741957587,
+                3.5290221408,
+                0.1138382321
             );
+
+            crossOverOperator = new UniformCrossOver(0.56);
+            parentSelectionOperator = new TournamentSelection(29);
+            migrationSelector = new TournamentSelection(110);
+            offspringCount = 538;
+            populationCount = 149;
+            islandCount = 1;
+            migrationCount = 132; // Doesn't matter as there is only one island...
+            migrationInterval = 6553; // Also doesn't matter as there is only one island...
         }
         else {
             // Set the setting for the schaffers function.
             mutationOperator = new SelfAdaptiveMutation(
-                Double.parseDouble(System.getProperty("tau")),
-                Double.parseDouble(System.getProperty("tauPrime")),
-                Double.parseDouble(System.getProperty("adaptationBoundary"))
+                3.69547148148232e-12,
+                2.9335794754,
+                4.76403381053298e-09
             );
+
+            crossOverOperator = new UniformCrossOver(0.2514602094);
+            parentSelectionOperator = new TournamentSelection(1);
+            migrationSelector = new TournamentSelection(180); // Doesn't really matter as there is no migration.
+            offspringCount = 3298;
+            populationCount = 690;
+            islandCount = 1;
+            migrationCount = 372; // Doesn't matter as there is only one island...
+            migrationInterval = 1; // Also doesn't matter as there is only one island...
         }
     }
 
@@ -74,15 +104,7 @@ public class player66 implements ContestSubmission
 	{
 		// Initialization
 
-        ICrossOverOperator crossOverOperator = new UniformCrossOver(Double.parseDouble(System.getProperty("crossOverRate")));
-        IParentSelectionOperator parentSelectionOperator = new TournamentSelection(Integer.parseInt(System.getProperty("parentTournamentSize")));
-        ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
-        IParentSelectionOperator migrationSelector = new TournamentSelection(Integer.parseInt(System.getProperty("migrationTournamentSize")));
-        int offspringCount = Integer.parseInt(System.getProperty("offspringCount"));
-        int populationCount = Integer.parseInt(System.getProperty("populationCount"));
-        int islandCount = Integer.parseInt(System.getProperty("islandCount"));
-        int migrationCount = Integer.parseInt(System.getProperty("migrationCount"));
-        int migrationInterval = Integer.parseInt(System.getProperty("migrationInterval"));
+        
         Instance[][] islands = new Instance[islandCount][];
         
         for (int i = 0; i < islandCount; i += 1) {
