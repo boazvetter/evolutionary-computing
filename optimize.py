@@ -58,7 +58,7 @@ def get_func(num_runs, num_jobs, function_name, no_islands):
         else:
             island_count = parameters[6]
             migration_interval = parameters[8]
-        migration_count = int(np.round(parameters[7] * population_count))
+        migration_count = int(np.maximum(1, np.round(parameters[7] * population_count)))
 
         tau = parameters[9]
         tau_prime = parameters[10]
