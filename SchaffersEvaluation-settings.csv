@@ -1,0 +1,4 @@
+iteration,populationCount,mutationRate,crossOverRate,parentTournamentSize,migrationTournamentSize,offspringCount,islandCount,migrationTournamentSize,islandCount,migrationCount,migrationInterval
+0,101,7.965429868602331,0.18343478986616382,78,60,788,46,60,46,3370,1430
+1,684,5.632882178455394,0.3854165025399162,10,157,2076,61,157,61,56991,1734
+2,200,0.15636406741193934,0.42340148070636974,78,58,214,71,58,71,15804,6060
