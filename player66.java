@@ -52,7 +52,20 @@ public class player66 implements ContestSubmission
 		// Do sth with property values, e.g. specify relevant settings of your algorithm
         if (isMultimodal && !hasStructure && !isSeparable) {
             // Set the settings for katsuura function.
-            mutationOperator = new UniformMutation(0.1);
+            mutationOperator = new SelfAdaptiveMutation(
+                1.82545602511028e-9,
+                1.0763482317922e-10,
+                8.6234881156227e-7
+            );
+
+            crossOverOperator = new UniformCrossOver(0.0);
+            parentSelectionOperator = new TournamentSelection(399);
+            migrationSelector = new TournamentSelection(589);
+            offspringCount = 10000;
+            populationCount = 1000;
+            islandCount = 1;
+            migrationCount = 984; // Doesn't matter as there is only one island...
+            migrationInterval = 40; // Also doesn't matter as there is only one island...
         }
         else if (!isMultimodal && hasStructure && isSeparable) {
             // Set the settings for the sphere function.
@@ -74,11 +87,11 @@ public class player66 implements ContestSubmission
             crossOverOperator = new UniformCrossOver(0.56);
             parentSelectionOperator = new TournamentSelection(29);
             migrationSelector = new TournamentSelection(110);
-            offspringCount = Integer.parseInt(System.getProperty("offspringCount"));
-            populationCount = Integer.parseInt(System.getProperty("populationCount"));
-            islandCount = Integer.parseInt(System.getProperty("islandCount"));
-            migrationCount = Integer.parseInt(System.getProperty("migrationCount")); // Doesn't matter as there is only one island...
-            migrationInterval = Integer.parseInt(System.getProperty("migrationInterval")); // Also doesn't matter as there is only one island...
+            offspringCount = 538;
+            populationCount = 149;
+            islandCount = 1;
+            migrationCount = 132; // Doesn't matter as there is only one island...
+            migrationInterval = 6553; // Also doesn't matter as there is only one island...
         }
         else {
             // Set the setting for the schaffers function.
@@ -91,11 +104,11 @@ public class player66 implements ContestSubmission
             crossOverOperator = new UniformCrossOver(0.2514602094);
             parentSelectionOperator = new TournamentSelection(1);
             migrationSelector = new TournamentSelection(180); // Doesn't really matter as there is no migration.
-            offspringCount = Integer.parseInt(System.getProperty("offspringCount"));
-            populationCount = Integer.parseInt(System.getProperty("populationCount"));
-            islandCount = Integer.parseInt(System.getProperty("islandCount"));
-            migrationCount = Integer.parseInt(System.getProperty("migrationCount")); // Doesn't matter as there is only one island...
-            migrationInterval = Integer.parseInt(System.getProperty("migrationInterval")); // Also doesn't matter as there is only one island...
+            offspringCount = 3298;
+            populationCount = 690;
+            islandCount = 1;
+            migrationCount = 372; // Doesn't matter as there is only one island...
+            migrationInterval = 1; // Also doesn't matter as there is only one island...
         }
     }
 
