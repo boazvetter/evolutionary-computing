@@ -68,12 +68,20 @@ public class player66 implements ContestSubmission
             migrationInterval = 40; // Also doesn't matter as there is only one island...
         }
         else if (!isMultimodal && hasStructure && isSeparable) {
-            // Set the settings for the sphere function.
+            // Set the settings for the sphere function. Unoptimized only care if works.
             mutationOperator = new SelfAdaptiveMutation(
-                Double.parseDouble(System.getProperty("tau")),
-                Double.parseDouble(System.getProperty("tauPrime")),
-                Double.parseDouble(System.getProperty("adaptationBoundary"))
+                0.07,
+                0.22,
+                1.0e-9
             );
+            crossOverOperator = new UniformCrossOver(0.3);
+            parentSelectionOperator = new TournamentSelection(5);
+            migrationSelector = new TournamentSelection(5);
+            offspringCount = 100;
+            populationCount = 100;
+            islandCount = 10;
+            migrationCount = 5;
+            migrationInterval = 50;
         }
         else if (!isMultimodal && !hasStructure && !isSeparable) {
             
