@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.Properties;
 import java.util.Arrays;
 import java.lang.Math;
+import java.util.ArrayList;
 
 public class player66 implements ContestSubmission
 {
@@ -147,6 +148,7 @@ public class player66 implements ContestSubmission
         System.out.println(calculate_diversity(populationAllIslands));
 
         while (!this._contest.isDone()) {
+
             generationCount += 1;
 
             for (int k = 0; k < islandCount; k += 1) {
@@ -281,27 +283,36 @@ public class player66 implements ContestSubmission
 
         // Calculate average standard deviation, per allele, over all individuals
         double[] totalAlleleStd = new double[amountOfAlleles];
-        double[] meanAlleleStd = new double[amountOfAlleles];
         double differenceOfMean = 0.0;
         double alleleVariance = 0.0;
 
         for (int i = 0; i < amountOfAlleles; i += 1){
             for (int j = 0; j < population.length; j += 1){
                 differenceOfMean = alleleMean[i] - population[j].getGene()[i];
-                alleleVariance = (differenceOfMean * differenceOfMean) / population.length;
-                totalAlleleStd[i] = totalAlleleStd[i] + Math.sqrt(alleleVariance);
+                alleleVariance = (differenceOfMean * differenceOfMean) / (population.length-1);
+                totalAlleleStd[i] = totalAlleleStd[i] + alleleVariance;
+
             }
-            meanAlleleStd[i] = totalAlleleStd[i] / population.length;
+
+            totalAlleleStd[i] = Math.sqrt(totalAlleleStd[i]);
+
         }
 
         // Take mean of standard deviation per allele
         double sum = 0.0;
         for (int i = 0; i < amountOfAlleles; i += 1){
-            sum += meanAlleleStd[i];
+            sum += totalAlleleStd[i];
         }
-
         return sum / amountOfAlleles;
 
+    }
+
+    public Instance[] merge_islands(Instance[][] islands, int populationCount, int islandCount){
+        Instance[] populationAllIslands = new Instance[islandCount*populationCount];
+        for (int i = 0; i < islands.length; i += 1){
+            System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
+        }
+        return populationAllIslands;
     }
 }
 
