@@ -12,6 +12,16 @@ public class player66 implements ContestSubmission
     private ContestWrapper _contest;
     IMutationOperator mutationOperator;
 
+    ICrossOverOperator crossOverOperator;
+    IParentSelectionOperator parentSelectionOperator;
+    ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
+    IParentSelectionOperator migrationSelector;
+    int offspringCount;
+    int populationCount;
+    int islandCount;
+    int migrationCount;
+    int migrationInterval;
+
 	public player66()
 	{
 		rnd_ = new Random();
@@ -46,31 +56,52 @@ public class player66 implements ContestSubmission
         }
         else if (!isMultimodal && hasStructure && isSeparable) {
             // Set the settings for the sphere function.
-            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22, 1.0e-9);
+            mutationOperator = new SelfAdaptiveMutation(
+                Double.parseDouble(System.getProperty("tau")),
+                Double.parseDouble(System.getProperty("tauPrime")),
+                Double.parseDouble(System.getProperty("adaptationBoundary"))
+            );
         }
         else if (!isMultimodal && !hasStructure && !isSeparable) {
+            
             // Set the settings for the bent cigar function.
-            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22, 1.0e-9);
+            mutationOperator = new SelfAdaptiveMutation(
+                0.0741957587,
+                3.5290221408,
+                0.1138382321
+            );
+
+            crossOverOperator = new UniformCrossOver(0.56);
+            parentSelectionOperator = new TournamentSelection(29);
+            migrationSelector = new TournamentSelection(110);
+            offspringCount = Integer.parseInt(System.getProperty("offspringCount"));
+            populationCount = Integer.parseInt(System.getProperty("populationCount"));
+            islandCount = Integer.parseInt(System.getProperty("islandCount"));
+            migrationCount = Integer.parseInt(System.getProperty("migrationCount")); // Doesn't matter as there is only one island...
+            migrationInterval = Integer.parseInt(System.getProperty("migrationInterval")); // Also doesn't matter as there is only one island...
         }
         else {
             // Set the setting for the schaffers function.
-            mutationOperator = new SelfAdaptiveMutation(0.07, 0.22, 1.0e-9);
+            mutationOperator = new SelfAdaptiveMutation(
+                3.69547148148232e-12,
+                2.9335794754,
+                4.76403381053298e-09
+            );
+
+            crossOverOperator = new UniformCrossOver(0.2514602094);
+            parentSelectionOperator = new TournamentSelection(1);
+            migrationSelector = new TournamentSelection(180); // Doesn't really matter as there is no migration.
+            offspringCount = Integer.parseInt(System.getProperty("offspringCount"));
+            populationCount = Integer.parseInt(System.getProperty("populationCount"));
+            islandCount = Integer.parseInt(System.getProperty("islandCount"));
+            migrationCount = Integer.parseInt(System.getProperty("migrationCount")); // Doesn't matter as there is only one island...
+            migrationInterval = Integer.parseInt(System.getProperty("migrationInterval")); // Also doesn't matter as there is only one island...
         }
     }
 
 	public void run()
 	{
 		// Initialization
-
-        ICrossOverOperator crossOverOperator = new UniformCrossOver(0.3);
-        IParentSelectionOperator parentSelectionOperator = new TournamentSelection(5);
-        ISurvivorSelectionMethod survivorSelectionMethod = new CommaSelection();
-        IParentSelectionOperator migrationSelector = new TournamentSelection(10);
-        int offspringCount = 100;
-        int populationCount = 20;
-        int islandCount = 5;
-        int migrationCount = 5;
-        int migrationInterval = 5;
         Instance[][] islands = new Instance[islandCount][];
 
         for (int i = 0; i < islandCount; i += 1) {
@@ -80,17 +111,19 @@ public class player66 implements ContestSubmission
             }
         }
 
+        // calculate fitness
+        int generationCount = 0;
+
         Instance[] populationAllIslands = new Instance[islandCount*populationCount];
         // Program is exiting, print some useful information
-        // System.out.println("Diversity after initialization:");
+        System.out.println("Diversity after initialization:");
         for (int i = 0; i < islands.length; i += 1){
             System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
         }
-        // System.out.println(calculate_diversity(populationAllIslands));
-
-
-        // calculate fitness
-        int generationCount = 0;
+        System.out.print("Diversity for generation ");
+        System.out.print(generationCount);
+        System.out.print(" is ");
+        System.out.println(calculate_diversity(populationAllIslands));
 
         while (!this._contest.isDone()) {
             generationCount += 1;
@@ -178,19 +211,21 @@ public class player66 implements ContestSubmission
 
                 islands[k] = population;
             }
+
+
+            // Program is exiting, print some useful information
+            populationAllIslands = new Instance[islandCount*populationCount];
+            // Program is exiting, print some useful information
+            // System.out.println("Diversity after run:");
+            for (int i = 0; i < islands.length; i += 1){
+                System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
+            }
+
+            System.out.print("Diversity for generation ");
+            System.out.print(generationCount);
+            System.out.print(" is ");
+            System.out.println(calculate_diversity(populationAllIslands));
         }
-
-
-        // Program is exiting, print some useful information
-        populationAllIslands = new Instance[islandCount*populationCount];
-        // Program is exiting, print some useful information
-        // System.out.println("Diversity after run:");
-        for (int i = 0; i < islands.length; i += 1){
-            System.arraycopy(islands[i], 0, populationAllIslands, i*populationCount, populationCount);
-        }
-        // System.out.println(calculate_diversity(populationAllIslands));
-
-
     }
 
 	public Instance[] init_population(int n){
